@@ -1,4 +1,4 @@
-package com.example.myfirstapp;
+package com.mva.authomobile;
 
 import org.junit.Test;
 

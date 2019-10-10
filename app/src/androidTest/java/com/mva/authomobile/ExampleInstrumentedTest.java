@@ -1,4 +1,4 @@
-package com.example.myfirstapp;
+package com.mva.authomobile;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
