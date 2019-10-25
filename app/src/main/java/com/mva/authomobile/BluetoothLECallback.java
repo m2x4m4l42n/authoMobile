@@ -26,7 +26,7 @@ public class BluetoothLECallback extends ScanCallback {
         super.onScanResult(callbackType, result);
 
         final Intent intent = new Intent(this.context, BluetoothLEBroadcastReceiver.class);
-        intent.putExtra(BluetoothLEBroadcastReceiver.RSSI, result.getRssi();
+        intent.putExtra(BluetoothLEBroadcastReceiver.RSSI, result.getRssi());
         intent.putExtra(BluetoothLEBroadcastReceiver.SCAN_RECORD_BYTES, result.getScanRecord().getBytes());
         intent.putExtra(BluetoothLEBroadcastReceiver.TIMESTAMP_NANOS, result.getTimestampNanos());
         sendIntent(intent);
