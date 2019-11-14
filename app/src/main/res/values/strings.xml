@@ -1,3 +1,11 @@
 <resources>
     <string name="app_name">AuthoMobile</string>
+    <string name="channel_name">AuthoMobile</string>
+    <string name="channel_description">Description</string>
+    <string name="notification_title">AuthoMobile</string>
+    <string name="notification_message">Running</string>
+    <string name="ticker_text">Tick Tick Tick</string>
+    <string name="button_service">Start/Stop</string>
+    <string name="protocol_ssid">authomobile_001</string>
+    <string name="presharedKey">899088806770122078805660</string>
 </resources>
