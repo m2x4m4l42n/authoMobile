@@ -194,6 +194,7 @@ public class MainService extends Service {
 
     }
     private void onScanResult(ScanResult scanResult){
+        Log.i(TAG, "onScanResult: "+ scanResult.getScanRecord().toString());
         BeaconManager.getInstance(getApplicationContext()).onScanResult(scanResult);
     }
 
@@ -214,6 +215,7 @@ public class MainService extends Service {
 
         startForeground(ONGOING_NOTIFICATION_ID, notification);
         BleManager.getInstance(getApplicationContext()).addFilter(BeaconManager.getScanFilter()).setScanSettings(BleManager.makeDefaultScanSettings()).startPeriodicScan(SCAN_INTERVAL);
+        setRunning();
 
     }
 

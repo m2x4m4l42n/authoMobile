@@ -97,7 +97,7 @@ public class BleManager implements Runnable{
             Log.i(TAG, "run: Scan stopped");
         }else{
             scanning = true;
-            bluetoothLeScanner.startScan(scanFilters,scanSettings,callback);
+            bluetoothLeScanner.startScan(callback);
             scanHandler.postDelayed(this, SCAN_PERIOD);
             Log.i(TAG, "run: Scan started");
         }

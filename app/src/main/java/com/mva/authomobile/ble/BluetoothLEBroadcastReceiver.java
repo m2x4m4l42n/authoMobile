@@ -22,6 +22,8 @@ public class BluetoothLEBroadcastReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
 
         ScanResult scanResult = intent.getParcelableExtra(SCAN_RESULT);
+        Log.i(TAG, "onReceive: "+ scanResult.getScanRecord().toString());
+
 
         if(scanResult != null){
             final Intent serviceIntent = new Intent(context, MainService.class);
