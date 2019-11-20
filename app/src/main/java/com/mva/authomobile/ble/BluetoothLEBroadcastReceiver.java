@@ -1,6 +1,7 @@
 package com.mva.authomobile.ble;
 
 import android.annotation.TargetApi;
+import android.bluetooth.le.ScanRecord;
 import android.bluetooth.le.ScanResult;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -21,9 +22,15 @@ public class BluetoothLEBroadcastReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
 
-        ScanResult scanResult = intent.getParcelableExtra(SCAN_RESULT);
-        Log.i(TAG, "onReceive: "+ scanResult.getScanRecord().toString());
-
+        final StringBuilder builder = new StringBuilder();
+        final ScanResult scanResult = intent.getParcelableExtra(SCAN_RESULT);
+        final ScanRecord scanRecord = scanResult.getScanRecord();
+        if(scanRecord.getManufacturerSpecificData(76) != null) {
+            for (byte b : scanRecord.getManufacturerSpecificData(76)) {
+                builder.append(String.format("%02X ", (b & 0xFF)));
+            }
+            Log.i(TAG, "onReceive: IBEACON: " + builder.toString());
+        }
 
         if(scanResult != null){
             final Intent serviceIntent = new Intent(context, MainService.class);

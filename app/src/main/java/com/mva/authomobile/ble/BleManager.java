@@ -97,9 +97,14 @@ public class BleManager implements Runnable{
             Log.i(TAG, "run: Scan stopped");
         }else{
             scanning = true;
-            bluetoothLeScanner.startScan(callback);
+            bluetoothLeScanner.startScan(scanFilters,scanSettings,callback);
             scanHandler.postDelayed(this, SCAN_PERIOD);
-            Log.i(TAG, "run: Scan started");
+            final StringBuilder builder = new StringBuilder();
+            final byte[] manu = scanFilters.get(0).getManufacturerData();
+            for(byte b : manu){
+                builder.append(String.format("%02X ", (b & 0xFF)));
+            }
+            Log.i(TAG, "run: Scan started with ManufacturerSpecificDataMask: " + builder.toString());
         }
     }
 }

@@ -75,10 +75,9 @@ public class BeaconManager {
         final ScanFilter.Builder builder = new ScanFilter.Builder();
         byte[] protocolBytes = new byte[23];
         ByteBuffer buffer = ByteBuffer.allocate(23);
-        buffer.put((byte)0);
-        buffer.put((byte)0);
         buffer.putInt(PROTOCOLID);
         buffer.put(new byte[]{
+                0,0,
                 0,0,
                 0,0,
                 0,0,0,0,0,0,0,0,
