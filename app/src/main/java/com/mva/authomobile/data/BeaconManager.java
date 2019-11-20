@@ -27,9 +27,9 @@ public class BeaconManager {
     public static final int PROTOCOLID = 1431655765;
     public static final int MANUFACTURERID = 76;
     private static final byte[] IBEACONIDENTIFIERMASK = new byte[] {
-            0,0,
             //UUID
             1,1,1,1,
+            0,0,
             0,0,
             0,0,
             0,0,0,0,0,0,0,0,

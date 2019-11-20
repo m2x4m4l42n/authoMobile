@@ -49,7 +49,7 @@ public class BleManager implements Runnable{
     }
     public static ScanSettings makeDefaultScanSettings(){
         return new ScanSettings.Builder()
-                .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
+                .setScanMode(ScanSettings.SCAN_MODE_BALANCED)
                 .build();
 
     }
@@ -97,7 +97,7 @@ public class BleManager implements Runnable{
             Log.i(TAG, "run: Scan stopped");
         }else{
             scanning = true;
-            bluetoothLeScanner.startScan(scanFilters,scanSettings,callback);
+            bluetoothLeScanner.startScan(scanFilters, scanSettings,callback);
             scanHandler.postDelayed(this, SCAN_PERIOD);
             final StringBuilder builder = new StringBuilder();
             final byte[] manu = scanFilters.get(0).getManufacturerData();

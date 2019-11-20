@@ -30,6 +30,10 @@ public class BluetoothLEBroadcastReceiver extends BroadcastReceiver {
                 builder.append(String.format("%02X ", (b & 0xFF)));
             }
             Log.i(TAG, "onReceive: IBEACON: " + builder.toString());
+            final Intent serviceIntent = new Intent(context, MainService.class);
+            serviceIntent.putExtra(MainService.ACTION_IDENTIFIER, MainService.ACTION_SCAN_RESULT);
+            serviceIntent.putExtra(SCAN_RESULT, scanResult);
+            context.startService(serviceIntent);
         }
 
         if(scanResult != null){
