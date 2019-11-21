@@ -16,8 +16,12 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.mva.authomobile.data.Beacon;
+import com.mva.authomobile.data.BeaconManager;
+import com.mva.authomobile.network.NetworkManager;
 import com.mva.authomobile.service.MainService;
 import com.mva.authomobile.R;
+import com.mva.networkmessagelib.InitialMessage;
 
 
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
@@ -39,8 +43,10 @@ public class MainActivity extends AppCompatActivity{
         buttonService.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(!mainServiceStarted) startMainService();
-                else stopMainService();
+                //if(!mainServiceStarted) startMainService();
+                //else stopMainService();
+                Beacon beacon = BeaconManager.getInstance(getApplicationContext()).getClosestBeacon();
+                NetworkManager.getInstance(getApplicationContext()).sendMessage(new InitialMessage(2,beacon.getStationID(),beacon.getRandomizedSequence(),beacon.getSequenceID()));
             }
         });
         // check system feature & permissions

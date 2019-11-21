@@ -7,8 +7,8 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.util.Log;
 
-import com.mva.authomobile.network.message.ConnectionMessage;
 import com.mva.authomobile.service.MainService;
+import com.mva.networkmessagelib.ConnectionMessage;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -39,18 +39,22 @@ public class MessageTask extends AsyncTask<Void,Void,Void> {
                 os.writeObject(message);
                 os.flush();
 
-                ConnectionMessage response = (ConnectionMessage) is.readObject();
+                Object obj = is.readObject();
 
-                final Intent serviceIntent = new Intent(context, MainService.class);
-                serviceIntent.putExtra(MainService.ACTION_IDENTIFIER,MainService.ACTION_MESSAGE_RECEIVED);
-                serviceIntent.putExtra(NetworkManager.MSG_TYPE, response.getMessageType());
-                serviceIntent.putExtra(NetworkManager.MESSAGE_IDENTIFIER, response);
-                context.startService(serviceIntent);
-
+                if(!(obj instanceof ConnectionMessage))
+                    Log.e(TAG, "doInBackground: Object not instance of ConnectionMessage" + obj.toString());
+                else {
+                    ConnectionMessage response = (ConnectionMessage) obj;
+                    final Intent serviceIntent = new Intent(context, MainService.class);
+                    serviceIntent.putExtra(MainService.ACTION_IDENTIFIER, MainService.ACTION_MESSAGE_RECEIVED);
+                    serviceIntent.putExtra(NetworkManager.MSG_TYPE, response.getMessageType());
+                    serviceIntent.putExtra(NetworkManager.MESSAGE_IDENTIFIER, response);
+                    context.startService(serviceIntent);
+                }
             } catch (IOException e) {
-                Log.e(TAG, e.getLocalizedMessage());
+                Log.e(TAG, "Clas ");
             } catch (ClassNotFoundException e){
-                Log.e(TAG, e.getLocalizedMessage());
+                Log.e(TAG, "Class not found");
             }
         }
 

@@ -4,25 +4,15 @@ import android.annotation.TargetApi;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothManager;
-import android.bluetooth.le.BluetoothLeScanner;
-import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
-import android.bluetooth.le.ScanSettings;
-import android.content.Context;
 import android.content.Intent;
 import android.net.DhcpInfo;
-import android.net.NetworkInfo;
 import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.SupportActivity;
-import android.support.v4.content.res.TypedArrayUtils;
 import android.util.Log;
 
 import com.mva.authomobile.R;
@@ -30,23 +20,17 @@ import com.mva.authomobile.activity.MainActivity;
 import com.mva.authomobile.application.AuthoMobile;
 import com.mva.authomobile.ble.BleManager;
 import com.mva.authomobile.ble.BluetoothLEBroadcastReceiver;
-import com.mva.authomobile.ble.BluetoothLECallback;
 import com.mva.authomobile.data.Beacon;
 import com.mva.authomobile.data.BeaconManager;
+import com.mva.authomobile.network.NetworkManager;
 import com.mva.authomobile.network.WifiConnectionBroadcastReceiver;
 import com.mva.authomobile.network.WifiConnectionManager;
-import com.mva.authomobile.network.message.ConnectedMessage;
-import com.mva.authomobile.network.message.ConnectionMessage;
-import com.mva.authomobile.network.message.ConnectionRefusedMessage;
-import com.mva.authomobile.network.message.InitialMessage;
-import com.mva.authomobile.network.NetworkManager;
-import com.mva.authomobile.network.message.StationChangedMessage;
-import com.mva.authomobile.network.message.VerificationMessage;
+
+import com.mva.networkmessagelib.*;
 
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
 
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 
@@ -55,7 +39,7 @@ public class MainService extends Service {
     private static final String TAG = "MainService";
     private static final int ONGOING_NOTIFICATION_ID = 1;
 
-    private static final long SCAN_INTERVAL = 5000;
+    private static final long SCAN_INTERVAL = 12000;
 
     public static final String ACTION_IDENTIFIER = "android.authomobile.main_service.action_identifier";
     public static final int ACTION_NEW_BEACON = 1;
@@ -89,7 +73,7 @@ public class MainService extends Service {
         public void run() {
             beacon = BeaconManager.getInstance(getApplicationContext()).getClosestBeacon();
             if(beacon != null && wifiConnected)
-                NetworkManager.getInstance(getApplicationContext()).sendMessage(new VerificationMessage(beacon));
+                NetworkManager.getInstance(getApplicationContext()).sendMessage(new VerificationMessage(beacon.getStationID(),beacon.getRandomizedSequence(),beacon.getSequenceID()));
 
             handler.postDelayed(this, 1000);
         }
@@ -110,23 +94,27 @@ public class MainService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
 
         if(!isRunning()) start();
-
         switch(intent.getIntExtra(ACTION_IDENTIFIER, 0)){
             case ACTION_NEW_BEACON:
+                Log.d(TAG, "onStartCommand: Start Intent received ACTION_NEW_BEACON");
                 onNewBeaconReceived();
                 break;
             case ACTION_WIFI_CONNECTED:
+                Log.d(TAG, "onStartCommand: Start Intent received ACTION WIFI CONNECTED");
                 WifiInfo wifiInfo = intent.getParcelableExtra(WifiConnectionBroadcastReceiver.WIFI_INFO_IDENTIFIER);
                 DhcpInfo dhcpInfo =intent.getParcelableExtra(WifiConnectionBroadcastReceiver.DHCP_INFO_IDENTIFIER);
                 onWifiConnected(wifiInfo,dhcpInfo);
                 break;
             case ACTION_WIFI_DISCONNECTED:
+                Log.d(TAG, "onStartCommand: Start Intent received ACTION WIFI DISCONNECTED");
                 onWifiDisconnected();
                 break;
             case ACTION_MESSAGE_RECEIVED:
+                Log.d(TAG, "onStartCommand: Start Intent received ACTION MESSAGE RECEIVED");
                 onMessageReceived(intent.getIntExtra(NetworkManager.MSG_TYPE, -1),(ConnectionMessage) intent.getParcelableExtra(NetworkManager.MESSAGE_IDENTIFIER));
                 break;
             case ACTION_SCAN_RESULT:
+                Log.d(TAG, "onStartCommand: Start Intent received ACTION SCAN RESULT");
                 final ScanResult scanResult = intent.getParcelableExtra(BluetoothLEBroadcastReceiver.SCAN_RESULT);
                 onScanResult(scanResult);
                 break;
@@ -148,13 +136,11 @@ public class MainService extends Service {
 
         if(wifiInfo.getSSID().equals(getString(R.string.protocol_ssid))) {
 
-            byte[] myIPAddress = BigInteger.valueOf(dhcpInfo.gateway).toByteArray();
-            ByteBuffer buffer = ByteBuffer.allocate(myIPAddress.length);
-            buffer.put(myIPAddress);
-            buffer.flip();
-            buffer.get(myIPAddress);
             try {
-                InetAddress myInetIP = InetAddress.getByAddress(myIPAddress);
+                final byte[] myIPAddress = BigInteger.valueOf(dhcpInfo.gateway).toByteArray();
+                if(myIPAddress.length != 4) throw new UnknownHostException();
+                final byte[] host = {myIPAddress[3],myIPAddress[2],myIPAddress[1],myIPAddress[0]};
+                InetAddress myInetIP = InetAddress.getByAddress(host);
                 Beacon beacon = BeaconManager.getInstance(getApplicationContext()).getClosestBeacon();
                 int userID = 1;
                 NetworkManager.getInstance(getApplicationContext()).setRemoteAddress(myInetIP).sendMessage(new InitialMessage(userID,beacon.getStationID(),beacon.getRandomizedSequence(),beacon.getSequenceID()));
@@ -167,7 +153,8 @@ public class MainService extends Service {
                 Log.e(TAG, "onWifiConnected: Unkown host exception", e);
             }
 
-        }
+        }else
+            wifiConnected = false;
 
 
     }

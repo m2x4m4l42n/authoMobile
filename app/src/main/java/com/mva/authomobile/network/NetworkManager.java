@@ -6,7 +6,7 @@ import android.os.Build;
 import android.util.Log;
 
 import com.mva.authomobile.BuildConfig;
-import com.mva.authomobile.network.message.ConnectionMessage;
+import com.mva.networkmessagelib.ConnectionMessage;
 
 import java.net.InetAddress;
 
@@ -27,7 +27,7 @@ public class NetworkManager {
     private static NetworkManager instance;
 
     private InetAddress remoteAddress;
-    private int targetPort = 80;
+    private int targetPort = 8080;
     private Context context;
 
     public static NetworkManager getInstance(Context context){

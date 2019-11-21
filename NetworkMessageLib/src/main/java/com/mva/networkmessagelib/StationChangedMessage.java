@@ -1,6 +1,4 @@
-package com.mva.authomobile.network.message;
-
-import com.mva.authomobile.network.message.ConnectionMessage;
+package com.mva.networkmessagelib;
 
 public class StationChangedMessage extends ConnectionMessage {
 

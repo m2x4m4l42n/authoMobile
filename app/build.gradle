@@ -27,4 +27,6 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 
     implementation 'mobi.inthepocket.android:ibeaconscanner:2.0.0'
+
+    implementation project(":NetworkMessageLib")
 }

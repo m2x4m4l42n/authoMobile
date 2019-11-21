@@ -1,4 +1,4 @@
-package com.mva.authomobile.network.message;
+package com.mva.networkmessagelib;
 
 public class ConnectedMessage extends ConnectionMessage {
 

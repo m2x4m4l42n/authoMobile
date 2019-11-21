@@ -1,1 +1,1 @@
-include ':app', ':BaseStation'
+include ':app', ':BaseStation', ':NetworkMessageLib', ':RXTXcomm'
