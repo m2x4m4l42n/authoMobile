@@ -3,10 +3,10 @@ package com.mva.networkmessagelib;
 public class InitialMessage extends ConnectionMessage {
 
     public static final int MSGTYPE = 1;
-    int userID;
-    short stationID;
-    byte[] randomizedSequence;
-    short sequenceNo;
+    private int userID;
+    private short stationID;
+    private byte[] randomizedSequence;
+    private short sequenceNo;
 
     public InitialMessage(int userID, short stationID, byte[] randomizedSequence, short sequenceNo){
         this.userID = userID;
@@ -18,5 +18,19 @@ public class InitialMessage extends ConnectionMessage {
     @Override
     public int getMessageType() {
         return MSGTYPE;
+    }
+
+    public int getUserID(){
+        return userID;
+    }
+    public short getStationID(){
+        return stationID;
+    }
+    public byte[] getRandomizedSequence() {
+        return randomizedSequence;
+    }
+
+    public short getSequenceNo() {
+        return sequenceNo;
     }
 }

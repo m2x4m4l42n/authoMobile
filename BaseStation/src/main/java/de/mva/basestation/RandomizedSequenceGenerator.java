@@ -3,69 +3,54 @@ package de.mva.basestation;
 import java.nio.ByteBuffer;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.List;
 
-public class RandomizedSequenceGenerator implements Runnable{
+public class RandomizedSequenceGenerator{
 
     private static final String TAG = "RandomizedSequenceGenerator";
-    private static final long RSG_INTERVAL = 1000;
     private static final int PROTOCOLID = 1431655765;
 
     private SecureRandom secureRandom;
-    private boolean running;
-    private Callback callback;
-    private byte[] stationID = new byte[2];
-    private byte[] beaconData = new byte[23];
-    ByteBuffer beaconDataBuffer;
+    private ByteBuffer beaconDataBuffer;
 
-    interface Callback{
-        void onNewRandomizedSequence(byte[] randomizedSequence, short sequenceID);
+    private static RandomizedSequenceGenerator instance;
+
+    public static RandomizedSequenceGenerator getInstance(){
+        if(instance == null)
+            instance = new RandomizedSequenceGenerator();
+        return instance;
     }
 
-    public RandomizedSequenceGenerator(Callback callback){
-        this.callback = callback;
-        this.running = true;
+    private RandomizedSequenceGenerator(){
         try{
             secureRandom = SecureRandom.getInstanceStrong();
         } catch (NoSuchAlgorithmException e){
             System.out.println(TAG + " No Secure Instance" );
             secureRandom = new SecureRandom();
         }
-        secureRandom.nextBytes(stationID);
         beaconDataBuffer = ByteBuffer.allocate(23);
     }
 
-    @Override
-    public void run() {
+    public byte[] makeBeaconData(short stationID, short sequenceNo) {
         byte[] randomizedSequence = new byte[12];
-
-        short sequenceID = 0;
-        while(isRunning()){
-            sequenceID +=1; sequenceID %=256;
-            secureRandom.nextBytes(randomizedSequence);
+        byte[] beaconData = new byte[23];
+        secureRandom.nextBytes(randomizedSequence);
+        beaconDataBuffer.clear();
             beaconDataBuffer.putInt(PROTOCOLID);
-            beaconDataBuffer.put(stationID);
+            beaconDataBuffer.putShort(stationID);
             beaconDataBuffer.put(randomizedSequence);
             beaconDataBuffer.putShort((short)0);
             beaconDataBuffer.put((byte)0);
-            beaconDataBuffer.putShort(sequenceID);
+            beaconDataBuffer.putShort(sequenceNo);
             beaconDataBuffer.flip();
             beaconDataBuffer.get(beaconData);
-            beaconDataBuffer.clear();
-            callback.onNewRandomizedSequence(beaconData, sequenceID);
-            try {
-                Thread.sleep(RSG_INTERVAL);
-            }catch (InterruptedException e){
-                System.out.println(TAG + " InteruptedException: " + e.getMessage());
-                return;
-            }
-        }
-
+            return beaconData;
     }
-
-    private synchronized boolean isRunning(){
-        return running;
-    }
-    private synchronized void stop(){
-        running = false;
+    public short makeNewStationID(){
+        byte[] idBytes = new byte[2];
+        secureRandom.nextBytes(idBytes);
+        beaconDataBuffer.clear();
+        beaconDataBuffer.put(idBytes);
+        return beaconDataBuffer.getShort(0);
     }
 }

@@ -4,9 +4,9 @@ public class VerificationMessage extends ConnectionMessage {
 
     public static final int MSGTYPE = 2;
 
-    short stationID;
-    byte[] randomizedSequence;
-    short sequenceNo;
+    private short stationID;
+    private byte[] randomizedSequence;
+    private short sequenceNo;
 
     @Override
     public int getMessageType() {
@@ -18,5 +18,17 @@ public class VerificationMessage extends ConnectionMessage {
         this.stationID = stationID;
         this.randomizedSequence = randomizedSequence;
         this.sequenceNo = sequenceNo;
+    }
+
+    public short getStationID() {
+        return stationID;
+    }
+
+    public byte[] getRandomizedSequence() {
+        return randomizedSequence;
+    }
+
+    public short getSequenceNo() {
+        return sequenceNo;
     }
 }

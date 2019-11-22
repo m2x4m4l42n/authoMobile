@@ -3,16 +3,18 @@ package de.mva.basestation;
 
 import com.mva.networkmessagelib.ConnectedMessage;
 import com.mva.networkmessagelib.ConnectionMessage;
+import com.mva.networkmessagelib.ConnectionRefusedMessage;
 import com.mva.networkmessagelib.InitialMessage;
 import com.mva.networkmessagelib.StationChangedMessage;
 import com.mva.networkmessagelib.VerificationMessage;
 
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import gnu.io.CommPortIdentifier;
 
@@ -22,71 +24,91 @@ import gnu.io.CommPortIdentifier;
  *  Please see http://mfizz.com/oss/rxtx-for-java for more info.
  */
 
-public class BaseStation implements RandomizedSequenceGenerator.Callback, MessageServer.ServerListener{
+public class BaseStation implements MessageServer.ServerListener, Runnable{
 
-    private HashMap<Short,byte[]> randomizedSequenceStorage;
-    List<SerialConnection> serialConnections;
+    private List<SerialConnection> serialConnections;
+    private StationStorage stationStorage;
+
+    private static final String[] BEACON_PORTS = {"COM5"};
+    private static final long SEQUENCE_INTERVAL = 1000;
 
     public static void main(String[] args){
         System.out.println("This runs");
-        System.out.println(System.getProperty("java.library.path"));
-        new Thread(new RandomizedSequenceGenerator(new BaseStation())).start();
-
+        new Thread(new BaseStation()).start();
     }
 
     public BaseStation(){
 
-        randomizedSequenceStorage = new HashMap<>(256);
+        stationStorage = new StationStorage();
         serialConnections = new ArrayList<>(10);
+        final ArrayList<String> beaconPortList = new ArrayList<>(BEACON_PORTS.length);
+        beaconPortList.addAll(Arrays.asList(BEACON_PORTS));
         final Enumeration<CommPortIdentifier> comPorts = CommPortIdentifier.getPortIdentifiers();
         CommPortIdentifier comPort;
         while(comPorts.hasMoreElements()) {
             comPort = comPorts.nextElement();
-            if(comPort.getPortType() == CommPortIdentifier.PORT_SERIAL) {
-                serialConnections.add(new SerialConnection(comPort.getName()));
+            if(comPort.getPortType() == CommPortIdentifier.PORT_SERIAL && beaconPortList.contains(comPort.getName())) {
+                stationStorage.addStation(RandomizedSequenceGenerator.getInstance().makeNewStationID(), new SerialConnection((comPort.getName())));
+
             }
         }
         new MessageServer(this);
 
     }
-    @Override
-    public void onNewRandomizedSequence(byte[] randomizedSequence, short sequenceID) {
-        StringBuilder builder = new StringBuilder();
-        for(byte b : randomizedSequence)
-            builder.append(String.format("%02X ", (b & 0xFF)));
 
-        System.out.println("Time: " + System.currentTimeMillis() +" RS:  " + builder.toString());
 
-        putRandomizedSequence(randomizedSequence, sequenceID);
-        Iterator<SerialConnection> it = serialConnections.iterator();
-        SerialConnection serialConnection;
-        while(it.hasNext()) {
-            serialConnection = it.next();
-            if(serialConnection.isOpen()) {
-                serialConnection.write(randomizedSequence);
-                System.out.println("written");
-            }
+    private ConnectionMessage onInitialMessageReceived(InitialMessage message){
+        if(stationStorage.occupieStation(message.getStationID()) &&
+                stationStorage.verifyRandomizedSequence(message.getStationID(),message.getRandomizedSequence(),message.getSequenceNo())) {
+            return new ConnectedMessage();
         }
+        return new ConnectionRefusedMessage();
     }
-
-    private synchronized void putRandomizedSequence(byte[] randomizedSequence, short sequenceID){
-        randomizedSequenceStorage.put(sequenceID,randomizedSequence);
+    private ConnectionMessage onVerificationMessageReceived(VerificationMessage message){
+        if(stationStorage.verifyRandomizedSequence(message.getStationID(),message.getRandomizedSequence(),message.getSequenceNo())) {
+            return new ConnectedMessage();
+        }
+        return new ConnectionRefusedMessage();
     }
-    private synchronized byte[] getRandomizedSequence(short sequenceID) {
-        return randomizedSequenceStorage.get(sequenceID);
+    private ConnectionMessage onStationChangedMessageReceived(StationChangedMessage message){
+        if(stationStorage.freeStation(message.getPreviousStationID()) &&
+                stationStorage.occupieStation(message.getNewStationID()) &&
+                stationStorage.verifyRandomizedSequence(message.getNewStationID(), message.getRandomizedSequence(), message.getSequenceID())){
+            return new ConnectedMessage();
+        }
+        return new ConnectionRefusedMessage();
     }
 
     @Override
     public Object onMessageReceived(ConnectionMessage message) {
         switch(message.getMessageType()) {
             case InitialMessage.MSGTYPE:
-                return new ConnectedMessage();
+                System.out.println("Initial Message Received");
+                return onInitialMessageReceived((InitialMessage)message);
             case StationChangedMessage.MSGTYPE:
-                return new ConnectedMessage();
+
+                System.out.println("StationChangedMessage received");
+                return onStationChangedMessageReceived((StationChangedMessage)message);
             case VerificationMessage.MSGTYPE:
-                return new ConnectedMessage();
+                System.out.println("Verification Message Received");
+                return onVerificationMessageReceived((VerificationMessage) message);
+            default:
+                System.out.println("Unknown Message Type Received");
         }
         return null;
+    }
+
+    @Override
+    public void run() {
+        while(true) {
+            stationStorage.generateRandomizedSequences();
+
+            try {
+                Thread.sleep(SEQUENCE_INTERVAL);
+            } catch (InterruptedException e) {
+                return;
+            }
+        }
     }
 }
 
