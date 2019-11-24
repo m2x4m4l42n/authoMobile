@@ -18,10 +18,6 @@ public class NetworkManager {
     public static final String MSG_TYPE = "authomobile.network.msg_type";
     public static final String MESSAGE_IDENTIFIER = "authmobile.network.msg_identifier";
 
-    public interface Callback {
-        void onReceive(ConnectionMessage message);
-    }
-
     private static final String TAG = "NetworkManager";
 
     private static NetworkManager instance;
@@ -63,7 +59,12 @@ public class NetworkManager {
     }
 
     public void sendMessage(ConnectionMessage message){
-        new MessageTask(context,message).execute();
+        if(WifiConnectionManager.getInstance(context).isConnected())
+            new MessageTask(context,message).execute();
+        else{
+            WifiConnectionManager.getInstance(context.getApplicationContext()).connect();
+            Log.d(TAG, "sendMessage: No Wifi Connection");
+        }
     }
 
 }

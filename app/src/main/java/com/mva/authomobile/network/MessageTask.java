@@ -48,11 +48,10 @@ public class MessageTask extends AsyncTask<Void,Void,Void> {
                     final Intent serviceIntent = new Intent(context, MainService.class);
                     serviceIntent.putExtra(MainService.ACTION_IDENTIFIER, MainService.ACTION_MESSAGE_RECEIVED);
                     serviceIntent.putExtra(NetworkManager.MSG_TYPE, response.getMessageType());
-                    serviceIntent.putExtra(NetworkManager.MESSAGE_IDENTIFIER, response);
                     context.startService(serviceIntent);
                 }
             } catch (IOException e) {
-                Log.e(TAG, "Clas ");
+                Log.e(TAG, "IOException");
             } catch (ClassNotFoundException e){
                 Log.e(TAG, "Class not found");
             }

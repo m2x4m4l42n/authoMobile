@@ -18,8 +18,6 @@ import com.mva.authomobile.service.MainService;
 public class WifiConnectionBroadcastReceiver extends BroadcastReceiver {
 
     private static final String TAG = "WifiConnectionBroadcast";
-    public static final String WIFI_INFO_IDENTIFIER = "authomobile.network.wifi_info";
-    public static final String DHCP_INFO_IDENTIFIER = "authomobile.network.dhcp_info";
 
 
     private Context mContext;
@@ -35,6 +33,8 @@ public class WifiConnectionBroadcastReceiver extends BroadcastReceiver {
             ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
             NetworkInfo networkInfo = cm.getActiveNetworkInfo();
 
+
+
             if (networkInfo != null && networkInfo.getType() == ConnectivityManager.TYPE_WIFI &&
                     networkInfo.isConnected()) {
                 // Wifi is connected
@@ -48,8 +48,8 @@ public class WifiConnectionBroadcastReceiver extends BroadcastReceiver {
 
                 final Intent serviceIntent = new Intent(context, MainService.class);
                 serviceIntent.putExtra(MainService.ACTION_IDENTIFIER, MainService.ACTION_WIFI_CONNECTED);
-                serviceIntent.putExtra(WIFI_INFO_IDENTIFIER, wifiInfo);
-                serviceIntent.putExtra(DHCP_INFO_IDENTIFIER, dhcpInfo);
+                serviceIntent.putExtra(WifiConnectionManager.WIFI_INFO_IDENTIFIER, wifiInfo);
+                serviceIntent.putExtra(WifiConnectionManager.DHCP_INFO_IDENTIFIER, dhcpInfo);
                 mContext.startService(serviceIntent);
 
             }

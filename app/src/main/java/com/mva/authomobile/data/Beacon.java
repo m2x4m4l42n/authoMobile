@@ -1,17 +1,13 @@
 package com.mva.authomobile.data;
 
 import android.annotation.TargetApi;
-import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanRecord;
 import android.bluetooth.le.ScanResult;
 import android.os.Build;
 import android.util.Log;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
 
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 public class Beacon {
@@ -27,7 +23,9 @@ public class Beacon {
 
         final int rssi = scanResult.getRssi();
         final long nanos = scanResult.getTimestampNanos();
-        final byte[] ibeacon = scanResult.getScanRecord().getManufacturerSpecificData(BeaconManager.MANUFACTURERID);
+        final ScanRecord scanRecord = scanResult.getScanRecord();
+        if(scanRecord == null) throw  new BeaconMalformedException();
+        final byte[] ibeacon = scanRecord.getManufacturerSpecificData(BeaconManager.MANUFACTURERID);
 
         if(ibeacon == null || ibeacon.length != 23) throw new BeaconMalformedException();
 
@@ -37,7 +35,7 @@ public class Beacon {
 
         setRssi(rssi);
         setStationID(beaconBuffer.getShort(4));
-        setRandomizedSequence(Arrays.copyOfRange(ibeacon,5,17));
+        setRandomizedSequence(Arrays.copyOfRange(ibeacon,6,18));
         setSequenceID(beaconBuffer.getShort(21));
         setTimeNanos(nanos);
 
@@ -64,7 +62,7 @@ public class Beacon {
         return randomizedSequence;
     }
 
-    private Beacon setSequenceID(short SequenceID){
+    private Beacon setSequenceID(short sequenceID){
         this.sequenceID = sequenceID;
         return this;
     }
@@ -96,7 +94,13 @@ public class Beacon {
 
     public String print(){
         StringBuilder builder = new StringBuilder();
-        builder.append("StationID " + stationID).append("| Rssi " + rssi).append(" | Time " + timeNanos);
+        builder.append("StationID ").append(stationID).append(" SequenceNo ").append(sequenceID).append("| Rssi ").append(rssi).append(" | Time ").append(timeNanos).append(" | ").append(printBytes(randomizedSequence));
+        return builder.toString();
+    }
+    public static String printBytes(byte[] bytes){
+        StringBuilder builder = new StringBuilder();
+        for(byte b : bytes)
+            builder.append(String.format("%02X ", (b & 0xFF)));
         return builder.toString();
     }
 }

@@ -4,17 +4,16 @@ package de.mva.basestation;
 import com.mva.networkmessagelib.ConnectedMessage;
 import com.mva.networkmessagelib.ConnectionMessage;
 import com.mva.networkmessagelib.ConnectionRefusedMessage;
+import com.mva.networkmessagelib.ConnectionTerminatedMessage;
 import com.mva.networkmessagelib.InitialMessage;
 import com.mva.networkmessagelib.StationChangedMessage;
+import com.mva.networkmessagelib.TerminateConnectionMessage;
 import com.mva.networkmessagelib.VerificationMessage;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import gnu.io.CommPortIdentifier;
 
@@ -77,6 +76,12 @@ public class BaseStation implements MessageServer.ServerListener, Runnable{
             return new ConnectedMessage();
         }
         return new ConnectionRefusedMessage();
+    }
+    private ConnectionMessage onTerminateConenctionMessageReceived(TerminateConnectionMessage message){
+        if(stationStorage.freeStation(message.getStationID()))
+            return new ConnectionTerminatedMessage();
+        else
+            return new ConnectionRefusedMessage();
     }
 
     @Override

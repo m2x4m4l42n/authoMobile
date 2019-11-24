@@ -1,29 +1,27 @@
 package com.mva.authomobile.data;
 
 import android.annotation.TargetApi;
-import android.app.Application;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
-import android.os.Looper;
-import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.mva.authomobile.service.MainService;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.NoSuchElementException;
 
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 public class BeaconManager {
 
     private static final String TAG = "BeaconManager";
+
+    public static final String STATIONID_IDENTIFIER = "com.mva.authomobile.data.stationid";
     public static final int PROTOCOLID = 1431655765;
     public static final int MANUFACTURERID = 76;
     private static final byte[] IBEACONIDENTIFIERMASK = new byte[] {
@@ -59,14 +57,20 @@ public class BeaconManager {
 
     public void onScanResult(ScanResult scanResult){
         byte[] result = scanResult.getScanRecord().getManufacturerSpecificData(MANUFACTURERID);
+
         if(result != null && result.length == 23) {
-            try {
-                Beacon beacon = new Beacon(scanResult);
-                Log.i(TAG, "onScanResult: IBeacon Format " + beacon.print());
-                putBeacon(beacon);
-            }catch (Beacon.BeaconMalformedException e){
-                Log.e(TAG, "onScanResult: Beacon malformed");
-            }
+            byte[] protocolBytes = Arrays.copyOfRange(result,0,4);
+            ByteBuffer buffer = ByteBuffer.allocate(4);
+            buffer.put(protocolBytes);
+            int protocolID = buffer.getInt(0);
+            if(protocolID == PROTOCOLID){
+                try {
+                    Beacon beacon = new Beacon(scanResult);
+                    putBeacon(beacon);
+                }catch (Beacon.BeaconMalformedException e){
+                    Log.e(TAG, "onScanResult: Beacon malformed");
+                }
+            }else Log.i(TAG, "onScanResult: ProtocolID does not match");
         }else
             Log.i(TAG, "onScanResult: No IBeacon Data detected");
     }
@@ -93,47 +97,43 @@ public class BeaconManager {
         builder.setManufacturerData(MANUFACTURERID,protocolBytes,IBEACONIDENTIFIERMASK);
         return builder.build();
     }
-    public static List<ScanFilter> makeProtocolFilters(){
-        List filters = new ArrayList<ScanFilter>();
-        filters.add(getScanFilter());
-        return filters;
-
-    }
 
     private synchronized BeaconManager putBeacon(Beacon beacon) {
 
         final Intent intent = new Intent(context, MainService.class);
         intent.putExtra(MainService.ACTION_IDENTIFIER, MainService.ACTION_NEW_BEACON);
-        context.startService(intent);
 
         if (beaconStorage.containsKey(beacon.getStationID())) {
-            if (beaconStorage.get(beacon.getStationID()).getTimeNanos() < beacon.getTimeNanos()) {
-                beaconStorage.remove(beacon.getStationID());
-                beaconStorage.put(beacon.getStationID(),beacon);
-                Log.i(TAG, "putBeacon: Updated Beacon");
-            }
+            beaconStorage.remove(beacon.getStationID());
+            beaconStorage.put(beacon.getStationID(),beacon);
+            Log.i(TAG, "putBeacon: Updated Beacon " + beacon.print());
+
         }else{
             beaconStorage.put(beacon.getStationID(),beacon);
-            Log.i(TAG, "putBeacon: Put new Beacon");
+            Log.i(TAG, "putBeacon: Put new Beacon " + beacon.print());
         }
-        Log.i(TAG, "putBeacon: " +System.currentTimeMillis() + " " + getClosestBeacon().print());
+
+        context.startService(intent);
         return this;
     }
 
     public synchronized Beacon getClosestBeacon(){
 
         Iterator<Beacon> beaconIterator = beaconStorage.values().iterator();
-        Beacon next, nearest;
+        Beacon next, nearest = null;
         long time = System.currentTimeMillis();
         try {
-            nearest = beaconIterator.next();
 
             while (beaconIterator.hasNext()) {
-
                 next = beaconIterator.next();
+                if ((time-(next.getTimeNanos())) < 1000000){
+                    if(nearest == null || nearest.getRssi() < next.getRssi())
+                        nearest = next;
+                }else {
+                    Log.i(TAG, "getClosestBeacon: Beacon too old");
+                    beaconStorage.remove(next.getStationID());
+                }
 
-                if (next != null && nearest.getRssi() < next.getRssi() && (time-(next.getTimeNanos())) < 1000000)
-                    nearest = next;
             }
 
         }catch(NoSuchElementException e){
@@ -143,6 +143,7 @@ public class BeaconManager {
 
         }
 
+        Log.i(TAG, "getClosestBeacon: " + nearest.print());
         return nearest;
 
     }

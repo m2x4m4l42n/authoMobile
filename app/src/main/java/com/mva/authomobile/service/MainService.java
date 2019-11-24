@@ -6,10 +6,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.bluetooth.le.ScanResult;
 import android.content.Intent;
-import android.net.DhcpInfo;
-import android.net.wifi.WifiInfo;
 import android.os.Build;
-import android.os.Handler;
 import android.os.IBinder;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
@@ -23,14 +20,10 @@ import com.mva.authomobile.ble.BluetoothLEBroadcastReceiver;
 import com.mva.authomobile.data.Beacon;
 import com.mva.authomobile.data.BeaconManager;
 import com.mva.authomobile.network.NetworkManager;
-import com.mva.authomobile.network.WifiConnectionBroadcastReceiver;
 import com.mva.authomobile.network.WifiConnectionManager;
 
 import com.mva.networkmessagelib.*;
 
-import java.math.BigInteger;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 
@@ -48,6 +41,7 @@ public class MainService extends Service {
     public static final int ACTION_MESSAGE_RECEIVED = 4;
     public static final int ACTION_SCAN_RESULT = 5;
 
+
     private boolean running = false;
     private synchronized boolean isRunning(){
         return running;
@@ -56,34 +50,10 @@ public class MainService extends Service {
         running = true;
     }
 
-    private boolean wifiConnected;
-    private SendBeaconTask sendBeaconTask;
+    private final int userID = 12;
+    private Beacon station;
+    private boolean connected = false;
 
-    private class SendBeaconTask implements Runnable{
-
-        private final Handler handler;
-        private Beacon beacon;
-
-        SendBeaconTask(Handler handler){
-            this.handler = handler;
-            handler.post(this);
-        }
-
-        @Override
-        public void run() {
-            beacon = BeaconManager.getInstance(getApplicationContext()).getClosestBeacon();
-            if(beacon != null && wifiConnected)
-                NetworkManager.getInstance(getApplicationContext()).sendMessage(new VerificationMessage(beacon.getStationID(),beacon.getRandomizedSequence(),beacon.getSequenceID()));
-
-            handler.postDelayed(this, 1000);
-        }
-
-        public void stop() {
-            handler.removeCallbacks(this);
-        }
-
-
-    }
     @Override
     public IBinder onBind(Intent intent) {
         return null;
@@ -101,9 +71,7 @@ public class MainService extends Service {
                 break;
             case ACTION_WIFI_CONNECTED:
                 Log.d(TAG, "onStartCommand: Start Intent received ACTION WIFI CONNECTED");
-                WifiInfo wifiInfo = intent.getParcelableExtra(WifiConnectionBroadcastReceiver.WIFI_INFO_IDENTIFIER);
-                DhcpInfo dhcpInfo =intent.getParcelableExtra(WifiConnectionBroadcastReceiver.DHCP_INFO_IDENTIFIER);
-                onWifiConnected(wifiInfo,dhcpInfo);
+                onWifiConnected();
                 break;
             case ACTION_WIFI_DISCONNECTED:
                 Log.d(TAG, "onStartCommand: Start Intent received ACTION WIFI DISCONNECTED");
@@ -111,7 +79,7 @@ public class MainService extends Service {
                 break;
             case ACTION_MESSAGE_RECEIVED:
                 Log.d(TAG, "onStartCommand: Start Intent received ACTION MESSAGE RECEIVED");
-                onMessageReceived(intent.getIntExtra(NetworkManager.MSG_TYPE, -1),(ConnectionMessage) intent.getParcelableExtra(NetworkManager.MESSAGE_IDENTIFIER));
+                onMessageReceived(intent.getIntExtra(NetworkManager.MSG_TYPE, -1));
                 break;
             case ACTION_SCAN_RESULT:
                 Log.d(TAG, "onStartCommand: Start Intent received ACTION SCAN RESULT");
@@ -129,51 +97,42 @@ public class MainService extends Service {
     }
 
     private void onNewBeaconReceived(){
-        if(!wifiConnected)
+        Beacon beacon = BeaconManager.getInstance(getApplicationContext()).getClosestBeacon();
+        if(!connected && beacon != null){
             WifiConnectionManager.getInstance(getApplicationContext()).connect();
-    }
-    private void onWifiConnected(WifiInfo wifiInfo, DhcpInfo dhcpInfo){
-
-        if(wifiInfo.getSSID().equals(getString(R.string.protocol_ssid))) {
-
-            try {
-                final byte[] myIPAddress = BigInteger.valueOf(dhcpInfo.gateway).toByteArray();
-                if(myIPAddress.length != 4) throw new UnknownHostException();
-                final byte[] host = {myIPAddress[3],myIPAddress[2],myIPAddress[1],myIPAddress[0]};
-                InetAddress myInetIP = InetAddress.getByAddress(host);
-                Beacon beacon = BeaconManager.getInstance(getApplicationContext()).getClosestBeacon();
-                int userID = 1;
-                NetworkManager.getInstance(getApplicationContext()).setRemoteAddress(myInetIP).sendMessage(new InitialMessage(userID,beacon.getStationID(),beacon.getRandomizedSequence(),beacon.getSequenceID()));
-                wifiConnected = true;
-
-
-
-
-            } catch (UnknownHostException e) {
-                Log.e(TAG, "onWifiConnected: Unkown host exception", e);
+            NetworkManager.getInstance(getApplicationContext()).sendMessage(new InitialMessage(userID, beacon.getStationID(),beacon.getRandomizedSequence(),beacon.getSequenceID()));
+            station = beacon;
+        }else if(connected && beacon == null){
+            NetworkManager.getInstance(getApplicationContext()).sendMessage(new TerminateConnectionMessage(station.getStationID()));
+        }else{
+            if(station.getStationID().equals(beacon.getStationID())) {
+                NetworkManager.getInstance(getApplicationContext()).sendMessage(new VerificationMessage(beacon.getStationID(), beacon.getRandomizedSequence(), beacon.getSequenceID()));
+            }else{
+                NetworkManager.getInstance(getApplicationContext()).sendMessage(new StationChangedMessage(station.getStationID(),beacon.getStationID(),beacon.getRandomizedSequence(),beacon.getSequenceID()));
             }
+        }
 
-        }else
-            wifiConnected = false;
 
+    }
+    private void onWifiConnected(){
 
     }
     private void onWifiDisconnected(){
-        wifiConnected = false;
-        if(sendBeaconTask != null) sendBeaconTask.stop();
+
     }
-    private void onMessageReceived(int type, ConnectionMessage message){
+    private void onMessageReceived(int type){
 
         Log.i(TAG, "onMessageReceived: Message Received of Type " + type);
         switch (type){
             case ConnectedMessage
                     .MSG_TYPE:
-                sendBeaconTask = new SendBeaconTask(new Handler(getMainLooper()));
+                Log.i(TAG, "onMessageReceived: Connected");
+                connected = true;
             break;
             case ConnectionRefusedMessage
                     .MSG_TYPE:
                 Log.e(TAG, "onMessageReceived: Connection Refused");
-                WifiConnectionManager.getInstance(getApplicationContext()).disconnect();
+                connected = false;
                 break;
                 default:
                     Log.e(TAG, "onMessageReceived: No action defined for Message");
@@ -206,6 +165,9 @@ public class MainService extends Service {
 
     }
 
+    private void startBeaconExchange(){
+
+    }
 
     @Override
     public void onDestroy() {

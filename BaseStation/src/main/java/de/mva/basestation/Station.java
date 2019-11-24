@@ -7,7 +7,7 @@ public class Station {
     private short stationID;
     private HashMap<Short, byte[]> randomizedSequenceStorage;
     private boolean occupied = false;
-    private short sequenceNo;
+    private short sequenceNo = 0;
     private SerialConnection serialConnection;
 
     Station(short stationID, SerialConnection serialConnection){
