@@ -46,6 +46,7 @@ public class MainService extends Service {
     public static final int ACTION_WIFI_DISCONNECTED = 3;
     public static final int ACTION_MESSAGE_RECEIVED = 4;
     public static final int ACTION_SCAN_RESULT = 5;
+    public static final int ACTION_BEACON_TIMEOUT = 6;
 
 
     private boolean running = false;
@@ -100,6 +101,9 @@ public class MainService extends Service {
                 final ScanResult scanResult = intent.getParcelableExtra(BluetoothLEBroadcastReceiver.SCAN_RESULT);
                 onScanResult(scanResult);
                 break;
+            case ACTION_BEACON_TIMEOUT:
+                Log.d(TAG, "onStartCommand: Start Intent received ACTION BEACON TIMEOUT");
+                onBeaconTimeout();
             case 0:
                 break;
             default:
@@ -116,21 +120,13 @@ public class MainService extends Service {
      */
     private void onNewBeaconReceived(){
         Beacon beacon = BeaconManager.getInstance(getApplicationContext()).getClosestBeacon();
-        if(!connected && beacon != null){
+        if(beacon!= null){
             WifiConnectionManager.getInstance(getApplicationContext()).connect();
-            NetworkManager.getInstance(getApplicationContext()).sendMessage(new InitialMessage(userID, beacon.getStationID(),beacon.getRandomizedSequence(),beacon.getSequenceID()));
-            station = beacon;
-        }else if(connected && beacon == null){
-            NetworkManager.getInstance(getApplicationContext()).sendMessage(new TerminateConnectionMessage(station.getStationID()));
-        }else{
-            if(station.getStationID().equals(beacon.getStationID())) {
-                NetworkManager.getInstance(getApplicationContext()).sendMessage(new VerificationMessage(beacon.getStationID(), beacon.getRandomizedSequence(), beacon.getSequenceID()));
-            }else{
-                NetworkManager.getInstance(getApplicationContext()).sendMessage(new StationChangedMessage(station.getStationID(),beacon.getStationID(),beacon.getRandomizedSequence(),beacon.getSequenceID()));
-            }
+            NetworkManager.getInstance(getApplicationContext()).sendMessage(new VerificationMessage(userID, beacon.getStationID(),beacon.getRandomizedSequence(), beacon.getSequenceID(), beacon.getRssi()));
         }
-
-
+    }
+    private void onBeaconTimeout(){
+        WifiConnectionManager.getInstance(getApplicationContext()).disconnect();
     }
     private void onWifiConnected(){
 
@@ -194,10 +190,6 @@ public class MainService extends Service {
         startForeground(ONGOING_NOTIFICATION_ID, notification);
         BleManager.getInstance(getApplicationContext()).addFilter(BeaconManager.getScanFilter()).setScanSettings(BleManager.makeDefaultScanSettings()).startPeriodicScanWithTimeout(SCAN_INTERVAL);
         setRunning();
-
-    }
-
-    private void startBeaconExchange(){
 
     }
 

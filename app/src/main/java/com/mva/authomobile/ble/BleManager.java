@@ -7,8 +7,11 @@ import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanSettings;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Handler;
 import android.util.Log;
+
+import com.mva.authomobile.service.MainService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -118,6 +121,10 @@ public class BleManager implements Runnable{
         if(scanning){
             scanning = false;
             bluetoothLeScanner.stopScan(callback);
+            Intent serviceIntent = new Intent(context, MainService.class);
+            serviceIntent.putExtra(MainService.ACTION_IDENTIFIER, MainService.ACTION_BEACON_TIMEOUT);
+            context.startService(serviceIntent);
+
             Log.i(TAG, "run: Timeout Scan stopped restart in " + NO_SCAN_PERIOD + "ms");
             if(scanHandler != null) scanHandler.postDelayed(new Runnable() {
                 @Override

@@ -4,9 +4,11 @@ public class VerificationMessage extends ConnectionMessage {
 
     public static final int MSGTYPE = 2;
 
-    private short stationID;
-    private byte[] randomizedSequence;
-    private short sequenceNo;
+    private final int userID;
+    private final short stationID;
+    private final byte[] randomizedSequence;
+    private final short sequenceNo;
+    private final int rssi;
 
     @Override
     public int getMessageType() {
@@ -14,12 +16,15 @@ public class VerificationMessage extends ConnectionMessage {
     }
 
 
-    public VerificationMessage(short stationID, byte[] randomizedSequence, short sequenceNo){
+    public VerificationMessage(int userID, short stationID, byte[] randomizedSequence, short sequenceNo, int rssi){
+        this.userID = userID;
         this.stationID = stationID;
         this.randomizedSequence = randomizedSequence;
         this.sequenceNo = sequenceNo;
+        this.rssi = rssi;
     }
 
+    public int getUserID(){ return userID; }
     public short getStationID() {
         return stationID;
     }
@@ -30,5 +35,9 @@ public class VerificationMessage extends ConnectionMessage {
 
     public short getSequenceNo() {
         return sequenceNo;
+    }
+
+    public int getRssi(){
+        return rssi;
     }
 }
