@@ -8,11 +8,11 @@ import java.util.HashMap;
  */
 public class Station {
 
-    private short stationID;
-    private HashMap<Short, byte[]> randomizedSequenceStorage;
-    private boolean occupied = false;
+    private final short stationID;
+    private final HashMap<Short, byte[]> randomizedSequenceStorage;
+    private final SerialConnection serialConnection;
     private short sequenceNo = 0;
-    private SerialConnection serialConnection;
+
 
     Station(short stationID, SerialConnection serialConnection){
         this.stationID = stationID;
@@ -34,13 +34,6 @@ public class Station {
     public byte[] getRandomizedSequence(short sequenceNo){
         return randomizedSequenceStorage.get(sequenceNo);
     }
-
-    public boolean isOccupied(){
-        return occupied;
-    }
-    public void setOccupied(boolean status){
-        occupied = status;
-    }
     public short currentSequence(){
         return sequenceNo;
     }
@@ -48,4 +41,5 @@ public class Station {
     public short getStationID() {
         return stationID;
     }
+
 }
