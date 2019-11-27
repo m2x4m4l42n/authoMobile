@@ -65,6 +65,14 @@ public class MainService extends Service {
         return null;
     }
 
+    /**
+     * Override of the onStartCommand method is used as a callback to the main service from various points in the application
+     * relevant data is transferred via the intent extras
+     * @param intent object holding relevant data
+     * @param flags
+     * @param startId
+     * @return
+     */
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -102,6 +110,10 @@ public class MainService extends Service {
 
     }
 
+    /**
+     *  Method that is called when a beacon is detected through the ble scan, if the system is inactive the system transitions to active station
+     *  and tries to initate a wifi connection, in active state it sends the corrisponding message to the base station via the network manager
+     */
     private void onNewBeaconReceived(){
         Beacon beacon = BeaconManager.getInstance(getApplicationContext()).getClosestBeacon();
         if(!connected && beacon != null){
@@ -126,6 +138,11 @@ public class MainService extends Service {
     private void onWifiDisconnected(){
 
     }
+
+    /**
+     * Network manager callback of received response message from the base station, the corrisponding action is performed
+     * @param type
+     */
     private void onMessageReceived(int type){
 
         Log.i(TAG, "onMessageReceived: Message Received of Type " + type);
@@ -145,11 +162,20 @@ public class MainService extends Service {
         }
 
     }
+
+    /**
+     * callback of the BLE Manager on a received scan result, invokes the BeaconManagers on scanresult method to handle scan result
+     * @param scanResult
+     */
     private void onScanResult(ScanResult scanResult){
         Log.i(TAG, "onScanResult: "+ scanResult.getScanRecord().toString());
         BeaconManager.getInstance(getApplicationContext()).onScanResult(scanResult);
     }
 
+    /**
+     *
+     * Intial method that is called on startup and inititates the notification
+     */
     private void start(){
 
         Intent notificationIntent = new Intent(this, MainActivity.class);
