@@ -80,6 +80,7 @@ public class StationStorage {
                 System.out.println("Station Occupancy fault");
 
         }
+        freeStation(stationID);
         return false;
     }
 }

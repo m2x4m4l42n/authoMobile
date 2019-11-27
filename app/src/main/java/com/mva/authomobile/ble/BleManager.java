@@ -22,7 +22,7 @@ public class BleManager implements Runnable{
     private static final String TAG = "BleManager";
 
     private static BleManager instance;
-    private static final long SCAN_PERIOD = 60000;
+    private static final long NO_SCAN_PERIOD = 6000;
     private Context context;
     private List<ScanFilter> scanFilters;
     private ScanSettings scanSettings;
@@ -30,7 +30,7 @@ public class BleManager implements Runnable{
     private BluetoothLECallback callback;
     private boolean scanning;
     private Handler scanHandler;
-    private long scanInterval;
+    private long timeout;
 
     public static BleManager getInstance(Context context){
         if(instance == null)
@@ -57,21 +57,42 @@ public class BleManager implements Runnable{
                 .build();
 
     }
-    public boolean startPeriodicScan(final long scanInterval){
+    public boolean startPeriodicScanWithTimeout(final long timeout){
 
         if(callback == null)
             callback = new BluetoothLECallback(context);
 
         if(setUpLE()){
-            this.scanInterval = scanInterval;
+            scanning = true;
+            final StringBuilder builder = new StringBuilder();
+            final byte[] manu = scanFilters.get(0).getManufacturerData();
+            for(byte b : manu){
+                builder.append(String.format("%02X ", (b & 0xFF)));
+            }
+            Log.i(TAG, "run: Scan started with ManufacturerSpecificDataMask: " + builder.toString());
+
+            this.timeout = timeout;
             if(scanHandler == null) scanHandler = new Handler();
-            scanHandler.post(this);
+            scanHandler.postDelayed(this, timeout);
+            bluetoothLeScanner.startScan(scanFilters, scanSettings,callback);
         }
         return false;
     }
-    public void stopScan(){
-        if(scanHandler != null)
+    public void restartTimeout(){
+        if(scanHandler != null){
             scanHandler.removeCallbacks(this);
+            scanHandler.postDelayed(this, timeout);
+        }
+    }
+    public void stopScan(){
+        if(scanHandler != null){
+            scanning = false;
+            bluetoothLeScanner.stopScan(callback);
+            Log.i(TAG, "stopScan: Scan stopped");
+            if(scanHandler != null)
+                scanHandler.removeCallbacks(this);
+        }
+
     }
 
 
@@ -97,18 +118,13 @@ public class BleManager implements Runnable{
         if(scanning){
             scanning = false;
             bluetoothLeScanner.stopScan(callback);
-            scanHandler.postDelayed(this, scanInterval);
-            Log.i(TAG, "run: Scan stopped");
-        }else{
-            scanning = true;
-            bluetoothLeScanner.startScan(scanFilters, scanSettings,callback);
-            scanHandler.postDelayed(this, SCAN_PERIOD);
-            final StringBuilder builder = new StringBuilder();
-            final byte[] manu = scanFilters.get(0).getManufacturerData();
-            for(byte b : manu){
-                builder.append(String.format("%02X ", (b & 0xFF)));
-            }
-            Log.i(TAG, "run: Scan started with ManufacturerSpecificDataMask: " + builder.toString());
+            Log.i(TAG, "run: Timeout Scan stopped restart in " + NO_SCAN_PERIOD + "ms");
+            if(scanHandler != null) scanHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    startPeriodicScanWithTimeout(timeout);
+                }
+            }, NO_SCAN_PERIOD);
         }
     }
 }

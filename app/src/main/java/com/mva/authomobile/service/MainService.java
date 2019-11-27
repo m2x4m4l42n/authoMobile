@@ -192,7 +192,7 @@ public class MainService extends Service {
                             .build();
 
         startForeground(ONGOING_NOTIFICATION_ID, notification);
-        BleManager.getInstance(getApplicationContext()).addFilter(BeaconManager.getScanFilter()).setScanSettings(BleManager.makeDefaultScanSettings()).startPeriodicScan(SCAN_INTERVAL);
+        BleManager.getInstance(getApplicationContext()).addFilter(BeaconManager.getScanFilter()).setScanSettings(BleManager.makeDefaultScanSettings()).startPeriodicScanWithTimeout(SCAN_INTERVAL);
         setRunning();
 
     }
