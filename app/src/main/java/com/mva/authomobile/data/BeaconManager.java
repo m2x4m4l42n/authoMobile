@@ -11,9 +11,12 @@ import android.util.Log;
 import com.mva.authomobile.service.MainService;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
@@ -28,6 +31,7 @@ public class BeaconManager {
     public static final String STATIONID_IDENTIFIER = "com.mva.authomobile.data.stationid";
     public static final int PROTOCOLID = 1431655765;
     public static final int MANUFACTURERID = 76;
+    public static final long BEACON_ELAPSED_TIME_THRESHHOLD_NANOS = 3000000000L;
     private static final byte[] IBEACONIDENTIFIERMASK = new byte[] {
             //UUID
             1,1,1,1,
@@ -61,6 +65,8 @@ public class BeaconManager {
 
     public void onScanResult(ScanResult scanResult){
         byte[] result = scanResult.getScanRecord().getManufacturerSpecificData(MANUFACTURERID);
+
+        removeOutdatedBeacons(scanResult.getTimestampNanos());
 
         if(result != null && result.length == 23) {
             byte[] protocolBytes = Arrays.copyOfRange(result,0,4);
@@ -102,6 +108,20 @@ public class BeaconManager {
         return builder.build();
     }
 
+    private synchronized BeaconManager removeOutdatedBeacons(long currentScanNanos){
+        List<Short> outdatedBeacon = new ArrayList<>();
+        for(Map.Entry<Short, Beacon> beaconEntry : beaconStorage.entrySet()){
+            long elapsedTimeNanos = currentScanNanos - beaconEntry.getValue().getTimeNanos();
+            if(elapsedTimeNanos > BEACON_ELAPSED_TIME_THRESHHOLD_NANOS){
+                outdatedBeacon.add(beaconEntry.getKey());
+                Log.d(TAG, "removeOutdatedBeacons: Beacon removed for StationID " + beaconEntry.getKey() + " Elapsedtime: " + elapsedTimeNanos);
+            }
+        }
+        for(Short s : outdatedBeacon){
+            beaconStorage.remove(s);
+        }
+        return this;
+    }
     private synchronized BeaconManager putBeacon(Beacon beacon) {
 
         final Intent intent = new Intent(context, MainService.class);

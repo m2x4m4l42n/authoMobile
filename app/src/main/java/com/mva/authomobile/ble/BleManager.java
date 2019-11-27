@@ -56,7 +56,7 @@ public class BleManager implements Runnable{
     }
     public static ScanSettings makeDefaultScanSettings(){
         return new ScanSettings.Builder()
-                .setScanMode(ScanSettings.SCAN_MODE_BALANCED)
+                .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
                 .build();
 
     }
