@@ -13,6 +13,10 @@ import java.net.InetAddress;
 
 
 @TargetApi(Build.VERSION_CODES.KITKAT)
+
+/**
+ *  Singleton class that manages network connectivity and sending and receiving messages over the network
+ */
 public class NetworkManager {
 
     public static final String MSG_TYPE = "authomobile.network.msg_type";

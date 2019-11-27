@@ -3,8 +3,10 @@ package de.mva.basestation;
 import java.nio.ByteBuffer;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.util.List;
 
+/**
+ * Class that generates the Randomized sequences with a secure random object
+ */
 public class RandomizedSequenceGenerator{
 
     private static final String TAG = "RandomizedSequenceGenerator";

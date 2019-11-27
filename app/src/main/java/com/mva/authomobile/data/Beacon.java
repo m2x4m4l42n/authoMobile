@@ -10,6 +10,10 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+
+/**
+ * Main data structure to handle beacon data that is received via BLE
+ */
 public class Beacon {
     private static final String TAG = "Beacon";
 

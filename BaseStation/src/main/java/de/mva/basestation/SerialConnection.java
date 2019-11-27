@@ -8,7 +8,10 @@ import java.util.Enumeration;
 
 import gnu.io.*;
 
-
+/**
+ * Class that handles serial conenctions specifies the baudrate
+ *
+ */
     public class SerialConnection {
 
         public static final int BAUDRATE = 115200;

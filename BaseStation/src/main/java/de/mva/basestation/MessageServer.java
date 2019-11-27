@@ -9,7 +9,9 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 
-
+/**
+ *  Handles sending and receiving messages over the network and instantiates the socketserver
+ */
 public class MessageServer implements Runnable{
 
     private boolean running = true;

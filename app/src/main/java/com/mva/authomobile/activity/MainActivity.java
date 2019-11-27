@@ -23,7 +23,10 @@ import com.mva.authomobile.service.MainService;
 import com.mva.authomobile.R;
 import com.mva.networkmessagelib.InitialMessage;
 
-
+/**
+ *  Main Activity which is used to initiate the main service and enable BLE Services
+ *
+ */
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 public class MainActivity extends AppCompatActivity{
 

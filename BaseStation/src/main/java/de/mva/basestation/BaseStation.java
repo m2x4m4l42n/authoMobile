@@ -23,6 +23,10 @@ import gnu.io.CommPortIdentifier;
  *  Please see http://mfizz.com/oss/rxtx-for-java for more info.
  */
 
+/**
+ * Main entry point and main class of the base station class
+ *
+ */
 public class BaseStation implements MessageServer.ServerListener, Runnable{
 
     private List<SerialConnection> serialConnections;

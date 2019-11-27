@@ -17,6 +17,10 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+
+/**
+ * Manager class implementing the main data management of received beacon data
+ */
 public class BeaconManager {
 
     private static final String TAG = "BeaconManager";

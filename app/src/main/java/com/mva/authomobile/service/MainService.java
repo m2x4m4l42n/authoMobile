@@ -27,6 +27,12 @@ import com.mva.networkmessagelib.*;
 
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 
+
+/**
+ * Core class of the application that is the main entry point and callback for the single components of the application
+ * components communicate using the startService method and transfer relevant data as intent extras
+ *
+ */
 public class MainService extends Service {
 
     private static final String TAG = "MainService";

@@ -2,6 +2,10 @@ package de.mva.basestation;
 
 import java.util.HashMap;
 
+/**
+ * main data mangament class for station data
+ *
+ */
 public class Station {
 
     private short stationID;

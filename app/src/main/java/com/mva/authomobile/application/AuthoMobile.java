@@ -9,6 +9,10 @@ import com.mva.authomobile.R;
 
 import mobi.inthepocket.android.beacons.ibeaconscanner.IBeaconScanner;
 
+
+/**
+ *  Application class that is used to create the Notification channel that is used for the foreground servive notification required for the main service
+ */
 public class AuthoMobile extends Application {
 
     public static final String CHANNEL_ID = "android.authoMobile.notificationChannel";

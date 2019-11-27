@@ -4,6 +4,10 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 
+/**
+ * Management class for station data
+ *
+ */
 public class StationStorage {
     private HashMap<Short, Station> stationStorage;
 

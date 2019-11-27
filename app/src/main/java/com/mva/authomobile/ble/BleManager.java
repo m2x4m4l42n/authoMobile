@@ -13,6 +13,10 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ *  Manager class that is used to manage BLE connectivity. All manager classes implement the singleton pattern to make them
+ *  easily accessible from all contexts and to prevent multiple instantiation
+ */
 public class BleManager implements Runnable{
 
     private static final String TAG = "BleManager";
