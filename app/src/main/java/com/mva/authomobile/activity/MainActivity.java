@@ -53,10 +53,8 @@ public class MainActivity extends AppCompatActivity{
         buttonService.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //if(!mainServiceStarted) startMainService();
-                //else stopMainService();
-                Beacon beacon = BeaconManager.getInstance(getApplicationContext()).getClosestBeacon();
-                NetworkManager.getInstance(getApplicationContext()).sendMessage(new InitialMessage(2,beacon.getStationID(),beacon.getRandomizedSequence(),beacon.getSequenceID()));
+                if(!mainServiceStarted) startMainService();
+                else stopMainService();
             }
         });
         // check system feature & permissions
@@ -78,7 +76,14 @@ public class MainActivity extends AppCompatActivity{
             @Override
             public void onReceive(Context context, Intent intent) {
                 TextView view = findViewById(R.id.textView);
-                view.setText(" " + intent.getIntExtra("rssi", 0));
+                TextView stationTextView = findViewById(R.id.stationTextView);
+                TextView statusTextView = findViewById(R.id.statusTextView);
+                int rssi = intent.getIntExtra("rssi", 0);
+                if(rssi != 0) view.setText(String.format("Current RSSI %d",rssi ));
+                short station =  intent.getShortExtra("stationID", (short)0);
+                if(station != 0) stationTextView.setText(String.format("Station %d",station));
+                String status = intent.getStringExtra("status");
+                if(status != null) statusTextView.setText(status);
             }
         },filter);
     }
@@ -89,11 +94,6 @@ public class MainActivity extends AppCompatActivity{
     void startMainService(){
         startService(new Intent(this, MainService.class));
         mainServiceStarted = true;
-    }
-
-    void onBeacon(int rssi){
-        TextView view = findViewById(R.id.textView);
-        view.setText(" " + rssi);
     }
 
 

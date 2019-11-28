@@ -94,7 +94,7 @@ public class MainService extends Service {
                 break;
             case ACTION_MESSAGE_RECEIVED:
                 Log.d(TAG, "onStartCommand: Start Intent received ACTION MESSAGE RECEIVED");
-                onMessageReceived(intent.getIntExtra(NetworkManager.MSG_TYPE, -1));
+                onMessageReceived(intent.getIntExtra(NetworkManager.MSG_TYPE, -1),(ConnectionMessage) intent.getSerializableExtra(NetworkManager.MESSAGE_IDENTIFIER));
                 break;
             case ACTION_SCAN_RESULT:
                 Log.d(TAG, "onStartCommand: Start Intent received ACTION SCAN RESULT");
@@ -125,12 +125,15 @@ public class MainService extends Service {
             activityIntent.setAction(MainActivity.ACTION_NEW_BEACON);
             activityIntent.putExtra("rssi", beacon.getRssi());
             sendBroadcast(activityIntent);
-
             WifiConnectionManager.getInstance(getApplicationContext()).connect();
             NetworkManager.getInstance(getApplicationContext()).sendMessage(new VerificationMessage(userID, beacon.getStationID(),beacon.getRandomizedSequence(), beacon.getSequenceID(), beacon.getRssi()));
         }
     }
     private void onBeaconTimeout(){
+        final Intent activityIntent = new Intent();
+        activityIntent.setAction(MainActivity.ACTION_NEW_BEACON);
+        activityIntent.putExtra("status", "disconnected");
+        sendBroadcast(activityIntent);
         WifiConnectionManager.getInstance(getApplicationContext()).disconnect();
     }
     private void onWifiConnected(){
@@ -144,23 +147,38 @@ public class MainService extends Service {
      * Network manager callback of received response message from the base station, the corrisponding action is performed
      * @param type
      */
-    private void onMessageReceived(int type){
+    private void onMessageReceived(int type, ConnectionMessage message){
 
         Log.i(TAG, "onMessageReceived: Message Received of Type " + type);
+        final Intent activityIntent = new Intent();
         switch (type){
             case ConnectedMessage.MSG_TYPE:
                 Log.i(TAG, "onMessageReceived: Connected");
                 connected = true;
-            break;
+                ConnectedMessage msg =(ConnectedMessage) message;
+                activityIntent.setAction(MainActivity.ACTION_NEW_BEACON);
+                activityIntent.putExtra("status", "Connected");
+                activityIntent.putExtra("stationID", msg.getStationID());
+                sendBroadcast(activityIntent);
+                break;
             case ConnectionRefusedMessage.MSG_TYPE:
                 Log.e(TAG, "onMessageReceived: Connection Refused");
                 connected = false;
+                activityIntent.setAction(MainActivity.ACTION_NEW_BEACON);
+                activityIntent.putExtra("status", "Connection Refused");
+                sendBroadcast(activityIntent);
                 break;
             case StationChangedMessage.MSGTYPE:
                 Log.d(TAG, "onMessageReceived: StationChanged");
+                activityIntent.setAction(MainActivity.ACTION_NEW_BEACON);
+                activityIntent.putExtra("status", "StationChanged");
+                sendBroadcast(activityIntent);
 
                 default:
                     Log.e(TAG, "onMessageReceived: No action defined for Message");
+                    activityIntent.setAction(MainActivity.ACTION_NEW_BEACON);
+                    activityIntent.putExtra("status", "ERROR");
+                    sendBroadcast(activityIntent);
         }
 
     }

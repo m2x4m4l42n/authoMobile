@@ -92,7 +92,7 @@ public class BaseStation implements MessageServer.ServerListener, Runnable{
         userOccupation.put(userID,stationID);
         Log.print("Station " + stationID + " occupied by " + userID);
         setTimeout(userID);
-        if(message == null) message = new ConnectedMessage();
+        if(message == null) message = new ConnectedMessage(stationID);
         return message;
     }
 

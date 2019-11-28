@@ -7,6 +7,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.util.Log;
 
+import com.mva.authomobile.activity.MainActivity;
 import com.mva.authomobile.service.MainService;
 import com.mva.networkmessagelib.ConnectionMessage;
 
@@ -52,6 +53,7 @@ public class MessageTask extends AsyncTask<Void,Void,Void> {
                     final Intent serviceIntent = new Intent(context, MainService.class);
                     serviceIntent.putExtra(MainService.ACTION_IDENTIFIER, MainService.ACTION_MESSAGE_RECEIVED);
                     serviceIntent.putExtra(NetworkManager.MSG_TYPE, response.getMessageType());
+                    serviceIntent.putExtra(NetworkManager.MESSAGE_IDENTIFIER, response);
                     context.startService(serviceIntent);
                 }
             } catch (IOException e) {
