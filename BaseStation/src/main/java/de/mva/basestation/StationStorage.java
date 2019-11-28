@@ -41,7 +41,7 @@ public class StationStorage {
         if(station == null) System.out.println("No such station in station storage station id: "+stationID);
         else System.out.println("Verifiying Station " + stationID + "Sequence " + sequenceID + " Current Sequence " + station.currentSequence());
         if(station != null) {
-            if (((station.currentSequence() - sequenceID) % 256) < 4) {
+            if (((station.currentSequence() - sequenceID) % 256) < ApplicationParameters.RANDOMIZED_SEQUENCE_CYCLE_THRESHHOLD) {
                 StringBuilder stringBuilder = new StringBuilder();
                 rsStation = Arrays.copyOfRange(station.getRandomizedSequence(sequenceID),6,18 );
                 for(byte b : rsStation)

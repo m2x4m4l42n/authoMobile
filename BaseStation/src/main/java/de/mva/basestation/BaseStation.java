@@ -5,16 +5,13 @@ import com.mva.networkmessagelib.ConnectedMessage;
 import com.mva.networkmessagelib.ConnectionMessage;
 import com.mva.networkmessagelib.ConnectionRefusedMessage;
 import com.mva.networkmessagelib.ConnectionTerminatedMessage;
-import com.mva.networkmessagelib.InitialMessage;
 import com.mva.networkmessagelib.StationChangedMessage;
-import com.mva.networkmessagelib.TerminateConnectionMessage;
 import com.mva.networkmessagelib.VerificationMessage;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import gnu.io.CommPortIdentifier;
@@ -31,12 +28,9 @@ import gnu.io.CommPortIdentifier;
  */
 public class BaseStation implements MessageServer.ServerListener, Runnable{
 
-    private List<SerialConnection> serialConnections;
     private StationStorage stationStorage;
     private HashMap<Integer, Short> userOccupation;
-
-    private static final String[] BEACON_PORTS = {"COM5"};
-    private static final long SEQUENCE_INTERVAL = 1000;
+    private HashMap<Integer, OccupationTimeout> userTimeout;
 
     public static void main(String[] args){
         System.out.println("This runs");
@@ -46,17 +40,17 @@ public class BaseStation implements MessageServer.ServerListener, Runnable{
     public BaseStation(){
 
         stationStorage = new StationStorage();
-        serialConnections = new ArrayList<>(10);
         userOccupation = new HashMap<>();
-        final ArrayList<String> beaconPortList = new ArrayList<>(BEACON_PORTS.length);
-        beaconPortList.addAll(Arrays.asList(BEACON_PORTS));
+        userTimeout = new HashMap<>();
         final Enumeration<CommPortIdentifier> comPorts = CommPortIdentifier.getPortIdentifiers();
         CommPortIdentifier comPort;
         while(comPorts.hasMoreElements()) {
             comPort = comPorts.nextElement();
-            if(comPort.getPortType() == CommPortIdentifier.PORT_SERIAL && beaconPortList.contains(comPort.getName())) {
-                stationStorage.addStation(RandomizedSequenceGenerator.getInstance().makeNewStationID(), new SerialConnection((comPort.getName())));
-
+            for(int i = 0; i< ApplicationParameters.BEACON_PORTS.length ; i++){
+                if(comPort.getPortType() == CommPortIdentifier.PORT_SERIAL && ApplicationParameters.BEACON_PORTS[i].equals(comPort.getName())) {
+                    stationStorage.addStation(RandomizedSequenceGenerator.getInstance().makeNewStationID(), new SerialConnection(comPort.getName(),ApplicationParameters.BAUDRATE[i]));
+                    break;
+                }
             }
         }
         new MessageServer(this);
@@ -66,19 +60,22 @@ public class BaseStation implements MessageServer.ServerListener, Runnable{
     private ConnectionMessage onVerificationMessageReceived(VerificationMessage message){
         final int userID = message.getUserID();
         final short stationID = message.getStationID();
-        if( verifyStationOccupation(stationID, userID) &&
-            stationStorage.verifyRandomizedSequence(stationID,message.getRandomizedSequence(),message.getSequenceNo()))
-            return new ConnectedMessage();
+        if(stationStorage.verifyRandomizedSequence(stationID,message.getRandomizedSequence(),message.getSequenceNo()))
+            return  verifyStationOccupation(stationID, userID);
         return new ConnectionTerminatedMessage();
     }
-    private boolean verifyStationOccupation(short stationID, int userID){
-        if(!stationStorage.hasStation(stationID))
-            return false;
+    private ConnectionMessage verifyStationOccupation(short stationID, int userID){
+
+        if(!stationStorage.hasStation(stationID)) return new ConnectionRefusedMessage();
+
+        ConnectionMessage message = null;
+
         if(userOccupation.containsKey(userID)){
             final short currentOccupation = userOccupation.get(userID);
             if(currentOccupation != stationID){
                 userOccupation.remove(userID);
-                System.out.println("Station Changed for User " + userID +" from " + currentOccupation + " to " + stationID);
+                Log.print("Station Changed for User " + userID +" from " + currentOccupation + " to " + stationID);
+                message = new StationChangedMessage(currentOccupation, stationID);
             }
         }
         if(userOccupation.containsValue(stationID)){
@@ -86,36 +83,37 @@ public class BaseStation implements MessageServer.ServerListener, Runnable{
                 if(entry.getValue().equals(stationID)){
                     final int currentUser = entry.getKey();
                     if(currentUser != userID){
-                        userOccupation.remove(currentUser);
-                        System.out.println("Occupation changed for Station " + stationID + " from " + currentUser + " to " + userID);
+                        System.out.println("Station " + stationID + " already occupied by " + currentUser);
+                        message = new ConnectionRefusedMessage();
                     }
                 }
             }
         }
         userOccupation.put(userID,stationID);
-        return true;
+        Log.print("Station " + stationID + " occupied by " + userID);
+        setTimeout(userID);
+        if(message == null) message = new ConnectedMessage();
+        return message;
     }
 
-    private ConnectionMessage onInitialMessageReceived(InitialMessage message){
-        return new ConnectionRefusedMessage();
+    void setTimeout(int userID){
+        if(userTimeout.containsKey(userID))
+            userTimeout.get(userID).reset();
+        else
+            userTimeout.put(userID,new OccupationTimeout(ApplicationParameters.USER_TIMEOUT , new OccupationTimeout.Callback() {
+                @Override
+                public void onTimeout() {
+                    Log.print("Timeout for userID " + userID + " on Station " + userOccupation.get(userID));
+                    userOccupation.remove(userID);
+                    userTimeout.remove(userID);
+                }
+            }));
     }
-    private ConnectionMessage onStationChangedMessageReceived(StationChangedMessage message){
-        return new ConnectionRefusedMessage();
-    }
-    private ConnectionMessage onTerminateConenctionMessageReceived(TerminateConnectionMessage message){
-            return new ConnectionRefusedMessage();
-    }
+
 
     @Override
     public Object onMessageReceived(ConnectionMessage message) {
         switch(message.getMessageType()) {
-            case InitialMessage.MSGTYPE:
-                System.out.println("Initial Message Received");
-                return onInitialMessageReceived((InitialMessage)message);
-            case StationChangedMessage.MSGTYPE:
-
-                System.out.println("StationChangedMessage received");
-                return onStationChangedMessageReceived((StationChangedMessage)message);
             case VerificationMessage.MSGTYPE:
                 System.out.println("Verification Message Received");
                 return onVerificationMessageReceived((VerificationMessage) message);
@@ -131,7 +129,7 @@ public class BaseStation implements MessageServer.ServerListener, Runnable{
             stationStorage.generateRandomizedSequences();
 
             try {
-                Thread.sleep(SEQUENCE_INTERVAL);
+                Thread.sleep(ApplicationParameters.SEQUENCE_INTERVAL);
             } catch (InterruptedException e) {
                 return;
             }

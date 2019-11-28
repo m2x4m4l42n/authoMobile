@@ -6,16 +6,10 @@ public class StationChangedMessage extends ConnectionMessage {
 
     private final short previousStationID;
     private final short newStationID;
-    private final int userID;
-    private final byte[] randomizedSequence;
-    private final short sequenceID;
 
-    public StationChangedMessage(short previousStationID, short newStationID,int userID, byte[] randomizedSequence, short sequenceID){
+    public StationChangedMessage(short previousStationID, short newStationID){
         this.previousStationID = previousStationID;
         this.newStationID = newStationID;
-        this.userID = userID;
-        this.randomizedSequence = randomizedSequence;
-        this.sequenceID = sequenceID;
     }
     @Override
     public int getMessageType() {
@@ -30,13 +24,4 @@ public class StationChangedMessage extends ConnectionMessage {
         return newStationID;
     }
 
-    public int getUserID(){return userID;}
-
-    public byte[] getRandomizedSequence() {
-        return randomizedSequence;
-    }
-
-    public short getSequenceID() {
-        return sequenceID;
-    }
 }

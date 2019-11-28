@@ -10,7 +10,7 @@ import java.security.SecureRandom;
 public class RandomizedSequenceGenerator{
 
     private static final String TAG = "RandomizedSequenceGenerator";
-    private static final int PROTOCOLID = 1431655765;
+
 
     private SecureRandom secureRandom;
     private ByteBuffer beaconDataBuffer;
@@ -38,7 +38,7 @@ public class RandomizedSequenceGenerator{
         byte[] beaconData = new byte[23];
         secureRandom.nextBytes(randomizedSequence);
         beaconDataBuffer.clear();
-            beaconDataBuffer.putInt(PROTOCOLID);
+            beaconDataBuffer.putInt(ApplicationParameters.PROTOCOLID);
             beaconDataBuffer.putShort(stationID);
             beaconDataBuffer.put(randomizedSequence);
             beaconDataBuffer.putShort((short)0);

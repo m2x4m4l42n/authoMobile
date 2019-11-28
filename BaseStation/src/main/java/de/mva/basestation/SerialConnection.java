@@ -14,8 +14,6 @@ import gnu.io.*;
  */
     public class SerialConnection {
 
-        public static final int BAUDRATE = 115200;
-
         Enumeration portList;
         CommPortIdentifier portId;
         SerialPort serialPort;
@@ -23,7 +21,7 @@ import gnu.io.*;
 
         boolean open = false;
 
-        public SerialConnection(String serialPortId){
+        public SerialConnection(String serialPortId, int baudrate){
             this.serialPortId = serialPortId;
 
             portList = CommPortIdentifier.getPortIdentifiers();
@@ -39,7 +37,7 @@ import gnu.io.*;
                             open = true;
                         } catch (PortInUseException e) { e.printStackTrace();open=false;}
                         try {
-                            serialPort.setSerialPortParams(BAUDRATE,
+                            serialPort.setSerialPortParams(baudrate,
                                     SerialPort.DATABITS_8,
                                     SerialPort.STOPBITS_1,
                                     SerialPort.PARITY_NONE);

@@ -16,7 +16,6 @@ public class MessageServer implements Runnable{
 
     private boolean running = true;
     private ServerListener listener;
-    private static final int PORT = 8080;
 
 
     public MessageServer(ServerListener listener){
@@ -36,7 +35,7 @@ public class MessageServer implements Runnable{
         ServerSocket serverSocket = null;
         Socket clientSocket;
         try {
-            serverSocket = new ServerSocket(PORT);
+            serverSocket = new ServerSocket(ApplicationParameters.PORT);
             while(isRunning()) {
                 try {
                     clientSocket = serverSocket.accept();
