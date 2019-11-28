@@ -66,9 +66,11 @@ public class WifiConnectionManager {
         WifiConfiguration wifiConfiguration;
         while(iterator.hasNext()){
             wifiConfiguration = iterator.next();
+            Log.d(TAG, "disconnect: " + wifiConfiguration.SSID);
             if(wifiConfiguration.SSID.equals(context.getString(R.string.protocol_ssid))){
                 wifiManager.disconnect();
-                wifiManager.enableNetwork(wifiConfiguration.networkId, false);
+                wifiManager.removeNetwork(wifiConfiguration.networkId);
+                wifiManager.saveConfiguration();
                 wifiManager.reconnect();
             }
         }
@@ -85,7 +87,7 @@ public class WifiConnectionManager {
             setConnected(true);
             return;
 
-        }else if(supplicantState.equals(SupplicantState.ASSOCIATING)|| supplicantState.equals(SupplicantState.FOUR_WAY_HANDSHAKE)|| supplicantState.equals(SupplicantState.AUTHENTICATING)|| supplicantState.equals(SupplicantState.GROUP_HANDSHAKE)|| supplicantState.equals(SupplicantState.SCANNING) ){
+        }else if(supplicantState.equals(SupplicantState.ASSOCIATING)|| supplicantState.equals(SupplicantState.FOUR_WAY_HANDSHAKE)|| supplicantState.equals(SupplicantState.AUTHENTICATING)|| supplicantState.equals(SupplicantState.GROUP_HANDSHAKE)){
             Log.d(TAG, "connect: Wifi busy " + supplicantState.toString());
             return;
         }

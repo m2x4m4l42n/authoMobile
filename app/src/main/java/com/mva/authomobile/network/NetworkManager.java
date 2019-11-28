@@ -8,8 +8,12 @@ import android.util.Log;
 import com.mva.authomobile.BuildConfig;
 import com.mva.networkmessagelib.ConnectionMessage;
 
+import java.io.IOException;
 import java.net.InetAddress;
 
+import javax.net.SocketFactory;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
 
 
 @TargetApi(Build.VERSION_CODES.KITKAT)
@@ -28,6 +32,7 @@ public class NetworkManager {
 
     private InetAddress remoteAddress;
     private int targetPort = 8080;
+    private SocketFactory sslSocketFactory;
     private Context context;
 
     public static NetworkManager getInstance(Context context){
@@ -36,7 +41,9 @@ public class NetworkManager {
         instance.context = context;
         return instance;
     }
-    private NetworkManager(){}
+    private NetworkManager(){
+        sslSocketFactory = SSLSocketFactory.getDefault();
+    }
 
     public NetworkManager setRemoteAddress(InetAddress address){
         if(BuildConfig.DEBUG) Log.d(TAG, "setRemoteAddress: "+ address.getHostAddress());
@@ -60,6 +67,10 @@ public class NetworkManager {
             return true;
         Log.e(TAG, "NetworkManager not fully initialized");
         return false;
+    }
+
+    public SSLSocket getSSLSocket() throws IOException {
+        return (SSLSocket) sslSocketFactory.createSocket(remoteAddress,targetPort);
     }
 
     public void sendMessage(ConnectionMessage message){

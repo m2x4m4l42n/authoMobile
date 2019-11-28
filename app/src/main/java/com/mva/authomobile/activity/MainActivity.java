@@ -3,7 +3,10 @@ package com.mva.authomobile.activity;
 import android.Manifest;
 import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.support.annotation.NonNull;
@@ -14,6 +17,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.mva.authomobile.data.Beacon;
@@ -23,6 +27,8 @@ import com.mva.authomobile.service.MainService;
 import com.mva.authomobile.R;
 import com.mva.networkmessagelib.InitialMessage;
 
+import org.w3c.dom.Text;
+
 /**
  *  Main Activity which is used to initiate the main service and enable BLE Services
  *
@@ -31,6 +37,7 @@ import com.mva.networkmessagelib.InitialMessage;
 public class MainActivity extends AppCompatActivity{
 
     public static final String TAG = "MAINACTIVITY";
+    public static final String ACTION_NEW_BEACON = "com.authomobile.action.new_beacon";
     public static final int REQUEST_ENABLE_BT = 20;
     public static final int REQUEST_PERMISSION_COARSE_LOCATION = 2;
 
@@ -63,6 +70,17 @@ public class MainActivity extends AppCompatActivity{
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},REQUEST_PERMISSION_COARSE_LOCATION);
 
         }
+
+        // register receiver for debug data update
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ACTION_NEW_BEACON);
+        registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                TextView view = findViewById(R.id.textView);
+                view.setText(" " + intent.getIntExtra("rssi", 0));
+            }
+        },filter);
     }
     void stopMainService(){
         stopService(new Intent(this, MainService.class));
@@ -72,6 +90,12 @@ public class MainActivity extends AppCompatActivity{
         startService(new Intent(this, MainService.class));
         mainServiceStarted = true;
     }
+
+    void onBeacon(int rssi){
+        TextView view = findViewById(R.id.textView);
+        view.setText(" " + rssi);
+    }
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {

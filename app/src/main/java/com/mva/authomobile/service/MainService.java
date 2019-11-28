@@ -121,6 +121,11 @@ public class MainService extends Service {
     private void onNewBeaconReceived(){
         Beacon beacon = BeaconManager.getInstance(getApplicationContext()).getClosestBeacon();
         if(beacon!= null){
+            final Intent activityIntent = new Intent();
+            activityIntent.setAction(MainActivity.ACTION_NEW_BEACON);
+            activityIntent.putExtra("rssi", beacon.getRssi());
+            sendBroadcast(activityIntent);
+
             WifiConnectionManager.getInstance(getApplicationContext()).connect();
             NetworkManager.getInstance(getApplicationContext()).sendMessage(new VerificationMessage(userID, beacon.getStationID(),beacon.getRandomizedSequence(), beacon.getSequenceID(), beacon.getRssi()));
         }
@@ -143,16 +148,17 @@ public class MainService extends Service {
 
         Log.i(TAG, "onMessageReceived: Message Received of Type " + type);
         switch (type){
-            case ConnectedMessage
-                    .MSG_TYPE:
+            case ConnectedMessage.MSG_TYPE:
                 Log.i(TAG, "onMessageReceived: Connected");
                 connected = true;
             break;
-            case ConnectionRefusedMessage
-                    .MSG_TYPE:
+            case ConnectionRefusedMessage.MSG_TYPE:
                 Log.e(TAG, "onMessageReceived: Connection Refused");
                 connected = false;
                 break;
+            case StationChangedMessage.MSGTYPE:
+                Log.d(TAG, "onMessageReceived: StationChanged");
+
                 default:
                     Log.e(TAG, "onMessageReceived: No action defined for Message");
         }
