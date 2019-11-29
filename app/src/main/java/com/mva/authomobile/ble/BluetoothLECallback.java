@@ -7,13 +7,8 @@ import android.bluetooth.le.ScanResult;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
-import android.support.v4.app.JobIntentService;
 import android.util.Log;
 
-import com.mva.authomobile.service.MainService;
-
-import java.util.ArrayList;
-import java.util.List;
 
 
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
