@@ -2,9 +2,11 @@ package com.mva.authomobile.service;
 
 import android.annotation.TargetApi;
 import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.bluetooth.le.ScanResult;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.IBinder;
@@ -58,8 +60,15 @@ public class MainService extends Service {
     }
 
     private final int userID = 12;
-    private Beacon station;
-    private boolean connected = false;
+
+    enum ApplicationState {
+        STANDBY,
+        ACTIVE,
+        CONNECTED,
+        DISCONNECTED
+    }
+
+    ApplicationState state = ApplicationState.STANDBY;
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -127,6 +136,7 @@ public class MainService extends Service {
             sendBroadcast(activityIntent);
             WifiConnectionManager.getInstance(getApplicationContext()).connect();
             NetworkManager.getInstance(getApplicationContext()).sendMessage(new VerificationMessage(userID, beacon.getStationID(),beacon.getRandomizedSequence(), beacon.getSequenceID(), beacon.getRssi()));
+            changeState(ApplicationState.ACTIVE);
         }
     }
     private void onBeaconTimeout(){
@@ -135,6 +145,7 @@ public class MainService extends Service {
         activityIntent.putExtra("status", "disconnected");
         sendBroadcast(activityIntent);
         WifiConnectionManager.getInstance(getApplicationContext()).disconnect();
+        changeState(ApplicationState.DISCONNECTED);
     }
     private void onWifiConnected(){
 
@@ -154,19 +165,19 @@ public class MainService extends Service {
         switch (type){
             case ConnectedMessage.MSG_TYPE:
                 Log.i(TAG, "onMessageReceived: Connected");
-                connected = true;
                 ConnectedMessage msg =(ConnectedMessage) message;
                 activityIntent.setAction(MainActivity.ACTION_NEW_BEACON);
                 activityIntent.putExtra("status", "Connected");
                 activityIntent.putExtra("stationID", msg.getStationID());
                 sendBroadcast(activityIntent);
+                changeState(ApplicationState.CONNECTED);
                 break;
             case ConnectionRefusedMessage.MSG_TYPE:
                 Log.e(TAG, "onMessageReceived: Connection Refused");
-                connected = false;
                 activityIntent.setAction(MainActivity.ACTION_NEW_BEACON);
                 activityIntent.putExtra("status", "Connection Refused");
                 sendBroadcast(activityIntent);
+                changeState(ApplicationState.DISCONNECTED);
                 break;
             case StationChangedMessage.MSGTYPE:
                 Log.d(TAG, "onMessageReceived: StationChanged");
@@ -197,24 +208,49 @@ public class MainService extends Service {
      * Intial method that is called on startup and inititates the notification
      */
     private void start(){
-
-        Intent notificationIntent = new Intent(this, MainActivity.class);
-        PendingIntent pendingIntent =
-                PendingIntent.getActivity(this, 0, notificationIntent, 0);
-
-        Notification notification =
-                    new NotificationCompat.Builder(this, AuthoMobile.CHANNEL_ID)
-                            .setContentTitle(getText(R.string.notification_title))
-                            .setContentText(getText(R.string.notification_message))
-                            .setSmallIcon(R.drawable.ic_launcher_foreground)
-                            .setContentIntent(pendingIntent)
-                            .setTicker(getText(R.string.ticker_text))
-                            .build();
-
-        startForeground(ONGOING_NOTIFICATION_ID, notification);
+        startForeground(ONGOING_NOTIFICATION_ID, makeNotification("Running in the background"));
         BleManager.getInstance(getApplicationContext()).addFilter(BeaconManager.getScanFilter()).setScanSettings(BleManager.makeDefaultScanSettings()).startPeriodicScanWithTimeout(SCAN_INTERVAL);
         setRunning();
 
+    }
+    private Notification makeNotification(String message){
+        PendingIntent pendingIntent =
+                PendingIntent.getActivity(this, 0, new Intent(this, MainActivity.class), 0);
+        return new NotificationCompat.Builder(this, AuthoMobile.CHANNEL_ID)
+                .setContentTitle(getText(R.string.notification_title))
+                .setContentText(message)
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setContentIntent(pendingIntent)
+                .setTicker(message)
+                .build();
+
+    }
+
+    void changeState(ApplicationState state){
+        if(this.state != state){
+            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            switch (state){
+                case STANDBY:
+                    notificationManager.notify(ONGOING_NOTIFICATION_ID, makeNotification("Running in the background"));
+                    this.state = state;
+                    break;
+                case ACTIVE:
+                    if(this.state != ApplicationState.CONNECTED){
+                    notificationManager.notify(ONGOING_NOTIFICATION_ID, makeNotification("Beacon found, connecting..."));
+                    this.state = state;
+                    }
+                    break;
+                case CONNECTED:
+                    notificationManager.notify(ONGOING_NOTIFICATION_ID, makeNotification("Connected"));
+                    this.state = state;
+                    break;
+                case DISCONNECTED:
+                    notificationManager.notify(ONGOING_NOTIFICATION_ID, makeNotification("Disconnected"));
+                    this.state = state;
+                    break;
+            }
+
+        }
     }
 
     @Override
