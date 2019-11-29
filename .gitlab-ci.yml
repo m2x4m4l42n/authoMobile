@@ -1,11 +1,11 @@
 stages:
   - environment
   - build
-  - test
-  - internal
-  - alpha
-  - beta
-  - production
+#  - test
+#  - internal
+#  - alpha
+#  - beta
+#  - production
 
 
 .updateContainerJob:
