@@ -38,9 +38,9 @@ public class Beacon {
         beaconBuffer.flip();
 
         setRssi(rssi);
-        setStationID(beaconBuffer.getShort(4));
-        setRandomizedSequence(Arrays.copyOfRange(ibeacon,6,18));
-        setSequenceID(beaconBuffer.getShort(21));
+        setStationID(beaconBuffer.getShort(6));
+        setRandomizedSequence(Arrays.copyOfRange(ibeacon,8,20));
+        setSequenceID(beaconBuffer.getShort(20));
         setTimeNanos(nanos);
 
     }

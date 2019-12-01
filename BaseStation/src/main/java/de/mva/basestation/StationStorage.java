@@ -43,7 +43,7 @@ public class StationStorage {
         if(station != null) {
             if (((station.currentSequence() - sequenceID) % 256) < ApplicationParameters.RANDOMIZED_SEQUENCE_CYCLE_THRESHHOLD) {
                 StringBuilder stringBuilder = new StringBuilder();
-                rsStation = Arrays.copyOfRange(station.getRandomizedSequence(sequenceID),6,18 );
+                rsStation = Arrays.copyOfRange(station.getRandomizedSequence(sequenceID),8,20);
                 for(byte b : rsStation)
                     stringBuilder.append(String.format("%02X", (b & 0xFF)));
                 stringBuilder.append(" ---- ");

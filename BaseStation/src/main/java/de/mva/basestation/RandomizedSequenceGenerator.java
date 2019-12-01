@@ -38,12 +38,12 @@ public class RandomizedSequenceGenerator{
         byte[] beaconData = new byte[23];
         secureRandom.nextBytes(randomizedSequence);
         beaconDataBuffer.clear();
+            beaconDataBuffer.put(new byte[]{0,0});
             beaconDataBuffer.putInt(ApplicationParameters.PROTOCOLID);
             beaconDataBuffer.putShort(stationID);
             beaconDataBuffer.put(randomizedSequence);
-            beaconDataBuffer.putShort((short)0);
-            beaconDataBuffer.put((byte)0);
             beaconDataBuffer.putShort(sequenceNo);
+            beaconDataBuffer.put((byte)0);
             beaconDataBuffer.flip();
             beaconDataBuffer.get(beaconData);
             return beaconData;

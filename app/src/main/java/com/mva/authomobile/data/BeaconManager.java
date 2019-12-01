@@ -33,9 +33,9 @@ public class BeaconManager {
     public static final int MANUFACTURERID = 76;
     public static final long BEACON_ELAPSED_TIME_THRESHHOLD_NANOS = 3000000000L;
     private static final byte[] IBEACONIDENTIFIERMASK = new byte[] {
+            0,0,
             //UUID
             1,1,1,1,
-            0,0,
             0,0,
             0,0,
             0,0,0,0,0,0,0,0,
@@ -69,7 +69,7 @@ public class BeaconManager {
         removeOutdatedBeacons(scanResult.getTimestampNanos());
 
         if(result != null && result.length == 23) {
-            byte[] protocolBytes = Arrays.copyOfRange(result,0,4);
+            byte[] protocolBytes = Arrays.copyOfRange(result,2,6);
             ByteBuffer buffer = ByteBuffer.allocate(4);
             buffer.put(protocolBytes);
             int protocolID = buffer.getInt(0);
@@ -89,9 +89,9 @@ public class BeaconManager {
         final ScanFilter.Builder builder = new ScanFilter.Builder();
         byte[] protocolBytes = new byte[23];
         ByteBuffer buffer = ByteBuffer.allocate(23);
+        buffer.put(new byte[]{0,0});
         buffer.putInt(PROTOCOLID);
         buffer.put(new byte[]{
-                0,0,
                 0,0,
                 0,0,
                 0,0,0,0,0,0,0,0,
