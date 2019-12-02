@@ -64,7 +64,7 @@ public class BaseStation implements MessageServer.ServerListener, Runnable{
             return  verifyStationOccupation(stationID, userID);
         return new ConnectionTerminatedMessage();
     }
-    private ConnectionMessage verifyStationOccupation(short stationID, int userID){
+    private synchronized ConnectionMessage verifyStationOccupation(short stationID, int userID){
 
         if(!stationStorage.hasStation(stationID)) return new ConnectionRefusedMessage();
 
