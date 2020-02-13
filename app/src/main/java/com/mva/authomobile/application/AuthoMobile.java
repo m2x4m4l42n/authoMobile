@@ -9,7 +9,7 @@ import com.mva.authomobile.R;
 
 
 
-/**
+/*
  *  Application class that is used to create the Notification channel that is used for the foreground servive notification required for the main service
  */
 public class AuthoMobile extends Application {

@@ -18,7 +18,7 @@ import javax.net.ssl.SSLSocketFactory;
 
 @TargetApi(Build.VERSION_CODES.KITKAT)
 
-/**
+/*
  *  Singleton class that manages network connectivity and sending and receiving messages over the network
  */
 public class NetworkManager {

@@ -11,7 +11,7 @@ import android.util.Log;
 import com.mva.authomobile.service.MainService;
 
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-/**
+/*
  *  BroadcastReceiver that handles BLE related broadcasts it is registered in the applications manifest
  */
 public class BluetoothLEBroadcastReceiver extends BroadcastReceiver {

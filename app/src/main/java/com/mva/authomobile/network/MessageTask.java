@@ -17,7 +17,7 @@ import java.net.Socket;
 
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 
-/**
+/*
  * AsyncTask extention that is used to send messages over the wifi network to the base station
  */
 public class MessageTask extends AsyncTask<Void,Void,Void> {
