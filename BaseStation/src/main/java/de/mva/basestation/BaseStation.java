@@ -8,8 +8,6 @@ import com.mva.networkmessagelib.ConnectionTerminatedMessage;
 import com.mva.networkmessagelib.StationChangedMessage;
 import com.mva.networkmessagelib.VerificationMessage;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
