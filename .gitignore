@@ -85,3 +85,6 @@ lint/tmp/
 
 # Logging Files
 log/
+
+#Mac stuff
+.DS_store

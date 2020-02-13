@@ -13,7 +13,7 @@ import android.util.Log;
 
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 
-/**
+/*
  * Callback class that extends the scan callback class of the android ble api and sends broadcasts whenever a scan result is presented
  */
 public class BluetoothLECallback extends ScanCallback {

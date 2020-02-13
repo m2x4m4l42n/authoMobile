@@ -16,7 +16,7 @@ import com.mva.authomobile.service.MainService;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
+/*
  *  Manager class that is used to manage BLE connectivity. All manager classes implement the singleton pattern to make them
  *  easily accessible from all contexts and to prevent multiple instantiation
  */

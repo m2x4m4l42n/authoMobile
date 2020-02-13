@@ -22,7 +22,7 @@ import java.util.Iterator;
 import java.util.List;
 
 
-/**
+/*
  * Manager class that implements the singleton pattern and is used to inititate wifi connections
  */
 public class WifiConnectionManager {
