@@ -11,10 +11,8 @@ import com.mva.networkmessagelib.ConnectionMessage;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.Socket;
 
 import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
 
 public class SSLMessageTask extends AsyncTask<Void,Void,Void> {
 

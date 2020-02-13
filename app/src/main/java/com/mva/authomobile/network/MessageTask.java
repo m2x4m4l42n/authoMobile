@@ -7,7 +7,6 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.util.Log;
 
-import com.mva.authomobile.activity.MainActivity;
 import com.mva.authomobile.service.MainService;
 import com.mva.networkmessagelib.ConnectionMessage;
 
