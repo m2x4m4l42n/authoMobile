@@ -20,14 +20,8 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.mva.authomobile.data.Beacon;
-import com.mva.authomobile.data.BeaconManager;
-import com.mva.authomobile.network.NetworkManager;
 import com.mva.authomobile.service.MainService;
 import com.mva.authomobile.R;
-import com.mva.networkmessagelib.InitialMessage;
-
-import org.w3c.dom.Text;
 
 /**
  *  Main Activity which is used to initiate the main service and enable BLE Services

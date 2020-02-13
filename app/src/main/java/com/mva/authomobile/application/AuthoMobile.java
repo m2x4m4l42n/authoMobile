@@ -7,7 +7,6 @@ import android.os.Build;
 
 import com.mva.authomobile.R;
 
-import mobi.inthepocket.android.beacons.ibeaconscanner.IBeaconScanner;
 
 
 /**
